@@ -55,13 +55,13 @@ import java.util.List;
  */
 public class BasicFirstExample {
     private static final int HOSTS = 1;
-    private static final int HOST_PES = 8;
+    private static final int HOST_PES = 1;
 
     private static final int VMS = 2;
-    private static final int VM_PES = 4;
+    private static final int VM_PES = 1;
 
-    private static final int CLOUDLETS = 4;
-    private static final int CLOUDLET_PES = 2;
+    private static final int CLOUDLETS = 2;
+    private static final int CLOUDLET_PES = 1;
     private static final int CLOUDLET_LENGTH = 10000;
 
     private final CloudSim simulation;
@@ -151,7 +151,7 @@ public class BasicFirstExample {
         final List<Cloudlet> list = new ArrayList<>(CLOUDLETS);
 
         //UtilizationModel defining the Cloudlets use only 50% of any resource all the time
-        final UtilizationModelDynamic utilizationModel = new UtilizationModelDynamic(0.5);
+        final UtilizationModelDynamic utilizationModel = new UtilizationModelDynamic(1);
 
         for (int i = 0; i < CLOUDLETS; i++) {
             final Cloudlet cloudlet = new CloudletSimple(CLOUDLET_LENGTH, CLOUDLET_PES, utilizationModel);
