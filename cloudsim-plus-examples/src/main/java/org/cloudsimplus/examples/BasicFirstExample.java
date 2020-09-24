@@ -34,6 +34,9 @@ import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.hosts.HostSimple;
 import org.cloudbus.cloudsim.resources.Pe;
 import org.cloudbus.cloudsim.resources.PeSimple;
+import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerSpaceShared;
+import org.cloudbus.cloudsim.schedulers.vm.VmSchedulerSpaceShared;
+import org.cloudbus.cloudsim.schedulers.vm.VmSchedulerTimeShared;
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic;
 import org.cloudbus.cloudsim.vms.Vm;
 import org.cloudbus.cloudsim.vms.VmSimple;
@@ -55,14 +58,14 @@ import java.util.List;
  */
 public class BasicFirstExample {
     private static final int HOSTS = 1;
-    private static final int HOST_PES = 1;
+    private static final int HOST_PES = 2;
 
     private static final int VMS = 2;
     private static final int VM_PES = 1;
 
     private static final int CLOUDLETS = 2;
     private static final int CLOUDLET_PES = 1;
-    private static final int CLOUDLET_LENGTH = 10000;
+    private static final int CLOUDLET_LENGTH = 1000;
 
     private final CloudSim simulation;
     private DatacenterBroker broker0;
@@ -75,14 +78,9 @@ public class BasicFirstExample {
     }
 
     private BasicFirstExample() {
-        /*Enables just some level of log messages.
-          Make sure to import org.cloudsimplus.util.Log;*/
-        //Log.setLevel(ch.qos.logback.classic.Level.WARN);
-
         simulation = new CloudSim();
         datacenter0 = createDatacenter();
 
-        //Creates a broker that is a software acting on behalf a cloud customer to manage his/her VMs and Cloudlets
         broker0 = new DatacenterBrokerSimple(simulation);
 
         vmList = createVms();
@@ -103,6 +101,7 @@ public class BasicFirstExample {
         final List<Host> hostList = new ArrayList<>(HOSTS);
         for(int i = 0; i < HOSTS; i++) {
             Host host = createHost();
+            host.setVmScheduler(new VmSchedulerTimeShared());
             hostList.add(host);
         }
 
@@ -137,6 +136,7 @@ public class BasicFirstExample {
         for (int i = 0; i < VMS; i++) {
             //Uses a CloudletSchedulerTimeShared by default to schedule Cloudlets
             final Vm vm = new VmSimple(1000, VM_PES);
+//            vm.setCloudletScheduler(new CloudletSchedulerSpaceShared());
             vm.setRam(512).setBw(1000).setSize(10000);
             list.add(vm);
         }

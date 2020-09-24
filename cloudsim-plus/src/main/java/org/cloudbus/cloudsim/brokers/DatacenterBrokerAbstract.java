@@ -703,7 +703,6 @@ public abstract class DatacenterBrokerAbstract extends CloudSimEntity implements
                                         datacenterMapper.apply(lastSelectedDc, vm);
             this.vmCreationRequests += requestVmCreation(lastSelectedDc, isFallbackDatacenter, vm);
         }
-
         return lastSelectedDc != Datacenter.NULL;
     }
 

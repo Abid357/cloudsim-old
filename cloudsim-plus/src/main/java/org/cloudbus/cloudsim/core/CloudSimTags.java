@@ -324,6 +324,27 @@ public final class CloudSimTags {
     public static final int HOST_REMOVE = BASE + 61;
 
     /**
+     * CloudSimFE tags begin here
+      */
+    public static final int REGION_SCHEDULING_FINISH = BASE + 63;
+
+    public static final int VFPGA_UPDATE_SEGMENT_PROCESSING = BASE + 64;
+
+    public static final int SCHEDULE_PARTITIONED_REGIONS = BASE + 65;
+
+    public static final int VFPGA_DYNAMIC_PARTIAL_RECONFIGURATION = BASE + 66;
+
+    public static final int VFPGA_RECONFIGURATION_FINISH = BASE + 67;
+
+    public static final int VFPGA_SEGMENT_SUBMIT = BASE + 68;
+
+    public static final int VFPGA_SEGMENT_ACK = BASE + 69;
+
+    public static final int VFPGA_SEGMENT_PROCESSING_FINISH = BASE + 70;
+
+    public static final int REGION_SCHEDULING_FAIL = BASE + 71;
+
+    /**
      * Private constructor to avoid class instantiation.
      */
     private CloudSimTags() {
