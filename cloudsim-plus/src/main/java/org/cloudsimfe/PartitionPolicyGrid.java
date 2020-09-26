@@ -9,10 +9,6 @@ public class PartitionPolicyGrid implements PartitionPolicy {
     private int cols = 1;
     private Fpga fpga;
 
-    public PartitionPolicyGrid(Fpga fpga) {
-        this.fpga = fpga;
-    }
-
     public void partition() {
         int width = (int) (fpga.getWidth() / cols);
         int length = (int) (fpga.getLength() / rows);
@@ -27,6 +23,8 @@ public class PartitionPolicyGrid implements PartitionPolicy {
                         .build();
                 fpga.getConfigurationManager().getRegions().add(region);
             }
+        long[][] map = new long[rows][cols];
+        fpga.getConfigurationManager().setMap(map);
     }
 
     @Override
@@ -44,5 +42,10 @@ public class PartitionPolicyGrid implements PartitionPolicy {
             rows = value;
         else if (option == OPTION_GRID_COLS)
             cols = value;
+    }
+
+    @Override
+    public void setFpga(Fpga fpga) {
+        this.fpga = fpga;
     }
 }

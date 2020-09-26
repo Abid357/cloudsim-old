@@ -129,14 +129,14 @@ public class Fpga {
      *
      * @see org.cloudsimfe.ConfigurationManager
      */
-    private ConfigurationManager mConfiguration;
+    private ConfigurationManager configurationManager;
 
     /**
      * Network manager of the FPGA.
      *
      * @see org.cloudsimfe.NetworkManager
      */
-    private NetworkManager mNetwork;
+    private NetworkManager networkManager;
 
     /**
      * VFpgaManager of the FPGA.
@@ -162,13 +162,13 @@ public class Fpga {
      * @param pll            {@link org.cloudsimfe.Fpga#pll}
      * @param length         {@link org.cloudsimfe.Fpga#length}
      * @param width          {@link org.cloudsimfe.Fpga#width}
-     * @param mConfiguration {@link org.cloudsimfe.Fpga#mConfiguration}
-     * @param mNetwork       {@link org.cloudsimfe.Fpga#mNetwork}
+     * @param configurationManager {@link org.cloudsimfe.Fpga#configurationManager}
+     * @param networkManager       {@link org.cloudsimfe.Fpga#networkManager}
      * @param vFpgaManager     {@link VFpgaManager}
      */
     private Fpga(int id, String brand, String family, String model, long le, long memory, int bram, int dsp, int io,
                  int transceiver, int clock, int pll,
-                 float length, float width, ConfigurationManager mConfiguration, NetworkManager mNetwork,
+                 float length, float width, ConfigurationManager configurationManager, NetworkManager networkManager,
                  VFpgaManager vFpgaManager) {
         this.id = id;
         this.brand = brand;
@@ -184,8 +184,8 @@ public class Fpga {
         this.clock = clock;
         this.length = length;
         this.width = width;
-        this.mConfiguration = mConfiguration;
-        this.mNetwork = mNetwork;
+        this.configurationManager = configurationManager;
+        this.networkManager = networkManager;
         this.vFpgaManager = vFpgaManager;
     }
 
@@ -199,7 +199,7 @@ public class Fpga {
      * @see org.cloudsimfe.ConfigurationManager
      */
     public long getAvailableResource(Resources type) {
-        List<Region> regions = mConfiguration.getRegions();
+        List<Region> regions = configurationManager.getRegions();
         switch (type) {
             case LOGIC_ELEMENT:
                 long totalLe = 0;
@@ -259,9 +259,9 @@ public class Fpga {
      * @see org.cloudsimfe.Region
      */
     public void printFabric(PrintStream writer) {
-        int rows = mConfiguration.getFabric().height;
-        int cols = mConfiguration.getFabric().width;
-        List<Region> regions = mConfiguration.getRegions();
+        int rows = configurationManager.getFabric().height;
+        int cols = configurationManager.getFabric().width;
+        List<Region> regions = configurationManager.getRegions();
 
         for (int c = 0; c <= cols; ++c)
             writer.print("*\t");
@@ -365,11 +365,11 @@ public class Fpga {
     }
 
     public ConfigurationManager getConfigurationManager() {
-        return mConfiguration;
+        return configurationManager;
     }
 
     public NetworkManager getNetworkManager() {
-        return mNetwork;
+        return networkManager;
     }
 
     public VFpgaManager getVFpgaManager() {
@@ -402,9 +402,11 @@ public class Fpga {
         private int pll;
         private float length;
         private float width;
-        private ConfigurationManager mConfiguration;
-        private NetworkManager mNetwork;
+        private ConfigurationManager configurationManager;
+        private NetworkManager networkManager;
         private VFpgaManager vFpgaManager;
+        private PartitionPolicy partitionPolicy;
+        private int staticRegionCount;
 
         /**
          * Constructor of the Builder class.
@@ -427,9 +429,11 @@ public class Fpga {
             clock = 10;
             length = 10;
             width = 12;
-            mConfiguration = new ConfigurationManager(new Rectangle(0, 0, 33, 33));
-            mNetwork = new NetworkManager(server);
+            configurationManager = new ConfigurationManager(new Rectangle(0, 0, 33, 33));
+            networkManager = new NetworkManager(server);
             vFpgaManager = new VFpgaManager(simulation);
+            partitionPolicy = new PartitionPolicyGrid();
+            staticRegionCount = 1;
         }
 
         /**
@@ -437,12 +441,14 @@ public class Fpga {
          */
         public Fpga build() {
             Fpga fpga = new Fpga(id, brand, family, model, le, memory, bram, dsp, io, transceiver, clock, pll, length
-                    , width, mConfiguration, mNetwork, vFpgaManager);
-            mConfiguration.setFpga(fpga);
-            mConfiguration.setPartitionPolicy(new PartitionPolicyGrid(fpga));
-            mNetwork.setFpga(fpga);
-            mNetwork.sendDataToComponent(new Payload(mConfiguration));
-//            vFpgaManager.setFpga(fpga);
+                    , width, configurationManager, networkManager, vFpgaManager);
+            configurationManager.setFpga(fpga);
+            configurationManager.setPartitionPolicy(partitionPolicy);
+            configurationManager.doPartition();
+            configurationManager.setNonVolatileMemory(new Bitstream(null, null, staticRegionCount, -1));
+            networkManager.setFpga(fpga);
+            networkManager.sendDataToComponent(new Payload(configurationManager));
+            vFpgaManager.setFpga(fpga);
             return fpga;
         }
 
@@ -590,13 +596,23 @@ public class Fpga {
             return this;
         }
 
+        public Builder setPartitionPolicy(PartitionPolicy partitionPolicy) {
+            this.partitionPolicy = partitionPolicy;
+            return this;
+        }
+
+        public Builder setStaticRegionCount(int count) {
+            this.staticRegionCount = count;
+            return this;
+        }
+
         /**
          * Adds a region or a partition within the FPGA fabric.
          *
          * @return this {@link org.cloudsimfe.Fpga.Builder} object
          */
         public Builder addRegion(Region region) {
-            mConfiguration.getRegions().add(region);
+            configurationManager.getRegions().add(region);
             return this;
         }
     }

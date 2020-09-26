@@ -27,22 +27,26 @@ public class ConfigurationManager extends AddressableComponent {
         volatileMemory = new LinkedList<>();
         availabilityList = new ArrayList<>();
 
-        int height = fabric.height;
-        int width = fabric.width;
+//        int height = fabric.height;
+//        int width = fabric.width;
+//
+//        List<Integer> divisorsForRow = new ArrayList<>();
+//        for (int i = 1; i <= height / 2; i++)
+//            if (height % i == 0)
+//                divisorsForRow.add(i);
+//        int rows = divisorsForRow.get(divisorsForRow.size() / 2); // get the middle divisor
+//
+//        List<Integer> divisorsForCol = new ArrayList<>();
+//        for (int i = 1; i <= width / 2; i++)
+//            if (width % i == 0)
+//                divisorsForCol.add(i);
+//        int cols = divisorsForCol.get(divisorsForCol.size() / 2); // get the middle divisor
+//
+//        map = new long[rows][cols];
+    }
 
-        List<Integer> divisorsForRow = new ArrayList<>();
-        for (int i = 1; i <= height / 2; i++)
-            if (height % i == 0)
-                divisorsForRow.add(i);
-        int rows = divisorsForRow.get(divisorsForRow.size() / 2); // get the middle divisor
-
-        List<Integer> divisorsForCol = new ArrayList<>();
-        for (int i = 1; i <= width / 2; i++)
-            if (width % i == 0)
-                divisorsForCol.add(i);
-        int cols = divisorsForCol.get(divisorsForCol.size() / 2); // get the middle divisor
-
-        map = new long[rows][cols];
+    public void setMap(long[][] map) {
+        this.map = map;
     }
 
     public void setPartitionOptions(Object... options){
@@ -214,6 +218,7 @@ public class ConfigurationManager extends AddressableComponent {
 
     public void setPartitionPolicy(PartitionPolicy policy) {
         this.policy = policy;
+        policy.setFpga(fpga);
     }
 
     public Fpga getFpga() {

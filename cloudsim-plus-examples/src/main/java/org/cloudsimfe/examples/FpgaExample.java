@@ -61,7 +61,7 @@ public class FpgaExample {
     private static final int ACCELERABLE_LENGTH = 10000;
 
     private static final int FPGAS = 1;
-    private static final int FPGA_PARTITIONING_ROWS = 3;
+    private static final int FPGA_PARTITIONING_ROWS = 4;
     private static final int FPGA_PARTITIONING_COLS = 3;
     private static final int STATIC_REGIONS = 1;
 
@@ -74,7 +74,7 @@ public class FpgaExample {
     private DatacenterBrokerFE broker0;
     private List<Vm> vmList;
     private List<Cloudlet> cloudletList;
-    private Datacenter datacenter0;
+    private DatacenterFE datacenter0;
     private List<Bitstream> imageList;
     private DhcpServer server;
 
@@ -100,6 +100,10 @@ public class FpgaExample {
 
         simulation.start();
 
+        System.out.println();
+        System.out.println();
+        datacenter0.getFpgaList().get(0).getVFpgaManager().printPerspective(System.out);
+
 //        final List<Cloudlet> finishedCloudlets = broker0.getCloudletFinishedList();
 //        finishedCloudlets.removeIf(cloudlet -> cloudlet.getStatus().equals(Cloudlet.Status.INSTANTIATED));
 //        final List<AccelerableCloudlet> finishedAccelerableCloudlets = new ArrayList<>();
@@ -114,6 +118,10 @@ public class FpgaExample {
     }
 
     public Fpga createAndPartitionFpga(int id) {
+        PartitionPolicy partitionPolicy = new PartitionPolicyGrid();
+        partitionPolicy.setOption(FPGA_PARTITIONING_ROWS, PartitionPolicyGrid.OPTION_GRID_ROWS);
+        partitionPolicy.setOption(FPGA_PARTITIONING_COLS, PartitionPolicyGrid.OPTION_GRID_COLS);
+
         Fpga fpga = new Fpga.Builder(simulation, id, server)
                 .setBrand("Altera")
                 .setModel("Stratix V 5SGSD3")
@@ -124,26 +132,19 @@ public class FpgaExample {
                 .setIoPins(450)
                 .setTransceivers(12)
                 .setPhaseLockedLoops(16)
-                .setLength(33)
+                .setLength(44)
                 .setWidth(33)
                 .setClock(150)
+                .setPartitionPolicy(partitionPolicy)
+                .setStaticRegionCount(STATIC_REGIONS)
                 .build();
-
-        fpga.getConfigurationManager().setPartitionOptions(FPGA_PARTITIONING_ROWS,
-                PartitionPolicyGrid.OPTION_GRID_ROWS);
-        fpga.getConfigurationManager().setPartitionOptions(FPGA_PARTITIONING_COLS,
-                PartitionPolicyGrid.OPTION_GRID_COLS);
-        fpga.getConfigurationManager().doPartition();
-        fpga.getConfigurationManager().setNonVolatileMemory(new Bitstream(null, null, STATIC_REGIONS, -1));
-
-        fpga.getVFpgaManager().setFpga(fpga);
         return fpga;
     }
 
     /**
      * Creates a Datacenter and its Hosts.
      */
-    private Datacenter createDatacenter() {
+    private DatacenterFE createDatacenter() {
         final List<Host> hostList = new ArrayList<>(HOSTS);
         for (int i = 0; i < HOSTS; i++) {
             Host host = createHost();
