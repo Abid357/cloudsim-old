@@ -3,7 +3,7 @@ package org.cloudsimfe;
 import org.cloudbus.cloudsim.core.CustomerEntityAbstract;
 import org.cloudbus.cloudsim.util.Conversion;
 
-public class Accelerator extends CustomerEntityAbstract {
+public class Accelerator extends CustomerEntityAbstract implements Clockable {
 
     public static final int TYPE_IMAGE_PROCESSING = 0;
     public static final int TYPE_ENCRYPTION = 1;
@@ -25,6 +25,8 @@ public class Accelerator extends CustomerEntityAbstract {
     private static final int BUSY = 1;
 
     private int id;
+
+    private long clock;
 
     /**
      * Million instructions per second (MIPS): a rough estimation of MIPS could be clock frequency
@@ -56,13 +58,14 @@ public class Accelerator extends CustomerEntityAbstract {
     private double submissionDelay;
     private VFpga vFpga;
     private int type;
-    private Wrapper wrapper;
+    private Adapter adapter;
 
     public Accelerator(final int id, final long mflops, final int concurrency, final int type) {
         this.id = id;
         this.mflops = mflops;
         this.concurrency = concurrency;
         submissionDelay = 0;
+        clock = 50;
         status = IDLE;
         this.type = type;
     }
@@ -77,7 +80,7 @@ public class Accelerator extends CustomerEntityAbstract {
      */
     public double segmentSubmit(final double fileTransferTime) {
         if (status == IDLE) {
-            Payload payload = wrapper.readFromBuffer(Wrapper.READ_BUFFER);
+            Payload payload = adapter.readFromBuffer(Adapter.READ_BUFFER);
             currentSegment = (AccelerableSegment) payload.getData().get(0);
             currentSegment.registerArrivalInAccelerator();
             se = new SegmentExecution(currentSegment);
@@ -116,7 +119,7 @@ public class Accelerator extends CustomerEntityAbstract {
             se.setFinishTime(currentTime);
 
             Payload payload = new Payload(se);
-            wrapper.writeToBuffer(payload, Wrapper.WRITE_BUFFER);
+            adapter.writeToBuffer(payload, Adapter.WRITE_BUFFER);
 
             status = IDLE;
             currentSegment = null;
@@ -125,12 +128,12 @@ public class Accelerator extends CustomerEntityAbstract {
         return Math.max(estimatedFinishTime, getSimulation().getMinTimeBetweenEvents());
     }
 
-    public Wrapper getWrapper() {
-        return wrapper;
+    public Adapter getAdapter() {
+        return adapter;
     }
 
-    public void setWrapper(Wrapper wrapper) {
-        this.wrapper = wrapper;
+    public void setAdapter(Adapter adapter) {
+        this.adapter = adapter;
     }
 
     public long getMflops() {
@@ -151,6 +154,14 @@ public class Accelerator extends CustomerEntityAbstract {
 
     public void setStatus(final int status) {
         this.status = status;
+    }
+
+    public long getClock() {
+        return clock;
+    }
+
+    public void setClock(long clock) {
+        this.clock = clock;
     }
 
     public long getId() {
@@ -197,5 +208,15 @@ public class Accelerator extends CustomerEntityAbstract {
     @Override
     public void setSubmissionDelay(final double submissionDelay) {
         this.submissionDelay = submissionDelay;
+    }
+
+    @Override
+    public long getClockValue() {
+        return clock;
+    }
+
+    @Override
+    public String getComponentId() {
+        return getClass().getSimpleName() + id;
     }
 }

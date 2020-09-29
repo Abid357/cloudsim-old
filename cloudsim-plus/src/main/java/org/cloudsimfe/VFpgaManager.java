@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class VFpgaManager extends CloudSimEntity implements Addressable {
+public class VFpgaManager extends CloudSimEntity implements Addressable, Clockable {
     private Fpga fpga;
     private List<VFpga> createdVFpgas;
     private List<VFpga> destroyedVFpgas;
@@ -285,7 +285,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable {
 
     public void processSegmentFinish(SimEvent evt){
         VFpga vFpga = (VFpga) evt.getData();
-        Payload payload = vFpga.getWrapper().readFromBuffer(Wrapper.WRITE_BUFFER);
+        Payload payload = vFpga.getAdapter().readFromBuffer(Adapter.WRITE_BUFFER);
         if (payload == null)
             payload = new Payload(new SegmentExecution(null));
         payload.addData(vFpga);
@@ -330,11 +330,21 @@ public class VFpgaManager extends CloudSimEntity implements Addressable {
 
         for (VFpga vFpga : createdVFpgas) {
             if (vFpga.getIpAddress().equals(ipAddress)) {
-                vFpga.getWrapper().writeToBuffer(payload, Wrapper.READ_BUFFER);
+                vFpga.getAdapter().writeToBuffer(payload, Adapter.READ_BUFFER);
                 payload.addData(vFpga);
                 sendNow(manager, CloudSimTags.VFPGA_SEGMENT_ACK, payload);
                 break;
             }
         }
+    }
+
+    @Override
+    public long getClockValue() {
+        return fpga.getClock();
+    }
+
+    @Override
+    public String getComponentId() {
+        return getClass().getSimpleName() + "-FPGA" + fpga.getId();
     }
 }

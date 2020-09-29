@@ -279,7 +279,7 @@ public class GoogleTaskEventsExample1 {
         final List<Cloudlet> list = broker.getCloudletFinishedList();
         list.sort(Comparator.comparingLong(Cloudlet::getId));
         new CloudletsTableBuilder(list)
-            .addColumn(0, new TextTableColumn("Job", "ID"), Cloudlet::getJobId)
+            .addColumn(0, new TextTableColumn("Task", "ID"), Cloudlet::getJobId)
             .addColumn(7, new TextTableColumn("VM Size", "MB"), this::getVmSize)
             .addColumn(8, new TextTableColumn("Cloudlet Size", "MB"), this::getCloudletSizeInMB)
             .addColumn(10, new TextTableColumn("Waiting Time", "Seconds").setFormat("%.0f"), Cloudlet::getWaitingTime)

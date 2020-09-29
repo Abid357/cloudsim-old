@@ -3,7 +3,7 @@ package org.cloudsimfe;
 import java.util.HashMap;
 import java.util.Map;
 
-public class NetworkManager extends AddressableComponent {
+public class NetworkManager extends AddressableComponent implements Clockable {
 
     public static String NETWORK_MANAGER_ADDRESS;
     public static String CONFIGURATION_MANAGER_ADDRESS;
@@ -167,5 +167,15 @@ public class NetworkManager extends AddressableComponent {
         return "Router{" +
                 "routingTable=" + "[\n" + entries + ']' +
                 '}';
+    }
+
+    @Override
+    public long getClockValue() {
+        return fpga.getClock();
+    }
+
+    @Override
+    public String getComponentId() {
+        return getClass().getSimpleName() + "-FPGA" + fpga.getId();
     }
 }

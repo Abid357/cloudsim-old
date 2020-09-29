@@ -26,7 +26,6 @@ import java.util.*;
  * or reserved. This is mainly done to keep a handful of addresses for the purpose of static IP addressing.
  *
  * @author Abid Farhan
- * @version CloudSim Plus 1.0
  * @see org.cloudsimfe.Addressable
  */
 public class DhcpServer {
@@ -55,10 +54,10 @@ public class DhcpServer {
      * Default constructor that initializes all lists and the address pools with default private network addresses.
      */
     public DhcpServer() {
-        assignedIps = new HashSet<String>();
-        excludedIps = new HashSet<String>();
-        offeredIps = new HashSet<String>();
-        pools = new HashMap<String, String>();
+        assignedIps = new HashSet<>();
+        excludedIps = new HashSet<>();
+        offeredIps = new HashSet<>();
+        pools = new HashMap<>();
 
         // default private address pools
         pools.put("192.168.0.0", "255.255.255.0");

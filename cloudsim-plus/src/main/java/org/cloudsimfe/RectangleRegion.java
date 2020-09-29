@@ -76,7 +76,7 @@ public class RectangleRegion extends Rectangle implements Region {
     /**
      * Default clock frequency of this region.
      */
-    private int clock;
+    private long clock;
 
     /**
      * Number of phased locked loops (PLL) occupied by this region.
@@ -86,7 +86,7 @@ public class RectangleRegion extends Rectangle implements Region {
     /**
      * Number of clock domains present in this region.
      */
-    private List<Integer> clockDomains;
+    private List<Long> clockDomains;
 
     /**
      * Indicates whether the region is static (true) or dynamic (false)
@@ -139,7 +139,7 @@ public class RectangleRegion extends Rectangle implements Region {
      * @param isAvailable  {@link org.cloudsimfe.RectangleRegion#isAvailable}
      */
     private RectangleRegion(int x, int y, int width, int height, Fpga fpga, long le, long memory, int bram, int dsp,
-                            int io, int transceiver, int clock, int pll, List<Integer> clockDomains, boolean isStatic
+                            int io, int transceiver, long clock, int pll, List<Long> clockDomains, boolean isStatic
             , boolean isAvailable) {
         super(x, y, width, height);
         this.fpga = fpga;
@@ -227,7 +227,7 @@ public class RectangleRegion extends Rectangle implements Region {
     }
 
     @Override
-    public List<Integer> getClockDomains() {
+    public List<Long> getClockDomains() {
         return clockDomains;
     }
 
@@ -264,11 +264,11 @@ public class RectangleRegion extends Rectangle implements Region {
         private int dsp;
         private int io;
         private int transceiver;
-        private int clock;
+        private long clock;
         private int pll;
         private boolean isStatic;
         private boolean isAvailable;
-        private List<Integer> clockDomains;
+        private List<Long> clockDomains;
 
         /**
          * Constructor of the Builder class.
@@ -393,13 +393,13 @@ public class RectangleRegion extends Rectangle implements Region {
          * @param clockDomain the new clock domain to be added to {@link org.cloudsimfe.RectangleRegion#clockDomains}
          * @return this {@link org.cloudsimfe.RectangleRegion.Builder} object
          */
-        public Builder addClockDomain(int clockDomain) {
+        public Builder addClockDomain(long clockDomain) {
             if (clockDomain == clock || clockDomains.size() == fpga.getPhaseLockedLoops())
                 return this;
 
             boolean clockExists = false;
-            for (Integer clock : clockDomains)
-                if (clock.intValue() == clockDomain) {
+            for (Long clock : clockDomains)
+                if (clock.longValue() == clockDomain) {
                     clockExists = true;
                     break;
                 }

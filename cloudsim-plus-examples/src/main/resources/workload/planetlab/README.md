@@ -1,6 +1,6 @@
 # Datacenter Trace Files in the PlanetLab Format
 
-This directory contains some workload files that can be used to create Cloudlets to simulate execution of jobs from a PlanetLab real Datacenter trace file.
+This directory contains some workload files that can be used to create Cloudlets to simulate execution of tasks from a PlanetLab real Datacenter trace file.
 These files are originated from [CloudSim](http://cloudbus.org/cloudsim).
 
 Each sub-directory contains traces from a specific date. 

@@ -93,5 +93,5 @@ public interface Region {
      *
      * @return the total amount of clock domains present
      */
-    List<Integer> getClockDomains();
+    List<Long> getClockDomains();
 }

@@ -47,7 +47,7 @@ import java.util.List;
  * @see org.cloudsimfe.Accelerator
  * @see org.cloudsimfe.Packet
  */
-public class Fpga {
+public class Fpga implements Clockable {
 
     /**
      * A static counter to automate ID generation of the FPGAs
@@ -112,7 +112,7 @@ public class Fpga {
     /**
      * Frequency of the main global clock in the FPGA.
      */
-    private int clock;
+    private long clock;
 
     /**
      * Length of the FPGA chip. It is measured in millimeters (mm).
@@ -139,37 +139,45 @@ public class Fpga {
     private NetworkManager networkManager;
 
     /**
-     * VFpgaManager of the FPGA.
+     * vFPGA manager of the FPGA.
      *
      * @see VFpgaManager
      */
     private VFpgaManager vFpgaManager;
 
     /**
+     * Clock manager of the FPGA.
+     *
+     * @see ClockManager
+     */
+    private ClockManager clockManager;
+
+    /**
      * The only constructor available. It is a private constructor because only the Builder inner class can call it.
      *
-     * @param id             {@link org.cloudsimfe.Fpga#id}
-     * @param brand          {@link org.cloudsimfe.Fpga#brand}
-     * @param family         {@link org.cloudsimfe.Fpga#family}
-     * @param model          {@link org.cloudsimfe.Fpga#model}
-     * @param le             {@link org.cloudsimfe.Fpga#le}
-     * @param memory         {@link org.cloudsimfe.Fpga#memory}
-     * @param bram           {@link org.cloudsimfe.Fpga#bram}
-     * @param dsp            {@link org.cloudsimfe.Fpga#dsp}
-     * @param io             {@link org.cloudsimfe.Fpga#io}
-     * @param transceiver    {@link org.cloudsimfe.Fpga#transceiver}
-     * @param clock          {@link org.cloudsimfe.Fpga#clock}
-     * @param pll            {@link org.cloudsimfe.Fpga#pll}
-     * @param length         {@link org.cloudsimfe.Fpga#length}
-     * @param width          {@link org.cloudsimfe.Fpga#width}
+     * @param id                   {@link org.cloudsimfe.Fpga#id}
+     * @param brand                {@link org.cloudsimfe.Fpga#brand}
+     * @param family               {@link org.cloudsimfe.Fpga#family}
+     * @param model                {@link org.cloudsimfe.Fpga#model}
+     * @param le                   {@link org.cloudsimfe.Fpga#le}
+     * @param memory               {@link org.cloudsimfe.Fpga#memory}
+     * @param bram                 {@link org.cloudsimfe.Fpga#bram}
+     * @param dsp                  {@link org.cloudsimfe.Fpga#dsp}
+     * @param io                   {@link org.cloudsimfe.Fpga#io}
+     * @param transceiver          {@link org.cloudsimfe.Fpga#transceiver}
+     * @param clock                {@link org.cloudsimfe.Fpga#clock}
+     * @param pll                  {@link org.cloudsimfe.Fpga#pll}
+     * @param length               {@link org.cloudsimfe.Fpga#length}
+     * @param width                {@link org.cloudsimfe.Fpga#width}
      * @param configurationManager {@link org.cloudsimfe.Fpga#configurationManager}
      * @param networkManager       {@link org.cloudsimfe.Fpga#networkManager}
-     * @param vFpgaManager     {@link VFpgaManager}
+     * @param vFpgaManager         {@link VFpgaManager}
+     * @param clockManager         {@link ClockManager}
      */
     private Fpga(int id, String brand, String family, String model, long le, long memory, int bram, int dsp, int io,
                  int transceiver, int clock, int pll,
                  float length, float width, ConfigurationManager configurationManager, NetworkManager networkManager,
-                 VFpgaManager vFpgaManager) {
+                 VFpgaManager vFpgaManager, ClockManager clockManager) {
         this.id = id;
         this.brand = brand;
         this.family = family;
@@ -187,6 +195,7 @@ public class Fpga {
         this.configurationManager = configurationManager;
         this.networkManager = networkManager;
         this.vFpgaManager = vFpgaManager;
+        this.clockManager = clockManager;
     }
 
     /**
@@ -316,6 +325,11 @@ public class Fpga {
         return id;
     }
 
+    @Override
+    public String getComponentId() {
+        return "FPGA" + id;
+    }
+
     public String getBrand() {
         return brand;
     }
@@ -340,7 +354,7 @@ public class Fpga {
         return dsp;
     }
 
-    public int getClock() {
+    public long getClock() {
         return clock;
     }
 
@@ -372,8 +386,17 @@ public class Fpga {
         return networkManager;
     }
 
+    public ClockManager getClockManager() {
+        return clockManager;
+    }
+
     public VFpgaManager getVFpgaManager() {
         return vFpgaManager;
+    }
+
+    @Override
+    public long getClockValue() {
+        return clock;
     }
 
     /**
@@ -405,6 +428,7 @@ public class Fpga {
         private ConfigurationManager configurationManager;
         private NetworkManager networkManager;
         private VFpgaManager vFpgaManager;
+        private ClockManager clockManager;
         private PartitionPolicy partitionPolicy;
         private int staticRegionCount;
 
@@ -425,13 +449,14 @@ public class Fpga {
             dsp = 10;
             io = 500;
             transceiver = 10;
-            pll = 5;
+            pll = 1;
             clock = 10;
             length = 10;
             width = 12;
             configurationManager = new ConfigurationManager(new Rectangle(0, 0, 33, 33));
             networkManager = new NetworkManager(server);
             vFpgaManager = new VFpgaManager(simulation);
+            clockManager = new ClockManager(clock, pll);
             partitionPolicy = new PartitionPolicyGrid();
             staticRegionCount = 1;
         }
@@ -441,7 +466,7 @@ public class Fpga {
          */
         public Fpga build() {
             Fpga fpga = new Fpga(id, brand, family, model, le, memory, bram, dsp, io, transceiver, clock, pll, length
-                    , width, configurationManager, networkManager, vFpgaManager);
+                    , width, configurationManager, networkManager, vFpgaManager, clockManager);
             configurationManager.setFpga(fpga);
             configurationManager.setPartitionPolicy(partitionPolicy);
             configurationManager.doPartition();
@@ -449,6 +474,14 @@ public class Fpga {
             networkManager.setFpga(fpga);
             networkManager.sendDataToComponent(new Payload(configurationManager));
             vFpgaManager.setFpga(fpga);
+
+            clockManager.setFpga(fpga);
+            clockManager.setClock(clock);
+            clockManager.setMaxCount(pll);
+            clockManager.acquireClockFor(fpga);
+            clockManager.acquireClockFor(networkManager);
+            clockManager.acquireClockFor(configurationManager);
+            clockManager.acquireClockFor(vFpgaManager);
             return fpga;
         }
 

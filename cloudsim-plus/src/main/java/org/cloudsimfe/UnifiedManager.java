@@ -33,7 +33,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         submittedSegmentList = new ArrayList<>();
         finishedSegmentList = new ArrayList<>();
         segmentExecutionList = new ArrayList<>();
-        scheduler = new RegionSchedulerSA(this);
+        scheduler = new RegionSchedulerMSA(this);
         format = new DecimalFormat("##########.00");
     }
 
@@ -109,17 +109,17 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
             return;
         }
 
-        List<Job> jobs = new ArrayList<>();
+        List<Task> tasks = new ArrayList<>();
         for (Bitstream bitstream : imageList) {
-            int id = Job.JOB_ID++;
-            int tile = bitstream.getRequiredBlockCount();
+            int id = Task.JOB_ID++;
+            int tile = bitstream.getRequiredRegionCount();
             int executionTime = bitstream.getRequiredExecutionTime();
             int deadline = bitstream.getDeadline();
-            jobs.add(new Job(id, tile, executionTime, deadline));
+            tasks.add(new Task(id, tile, executionTime, deadline));
         }
 
         int regionCount = getTotalRegionCount();
-        scheduler.scheduleRegions(vFpgaManagers.size(), regionCount, jobs);
+        scheduler.scheduleRegions(vFpgaManagers.size(), regionCount, tasks);
         send(datacenter, getSchedulingDurationInSeconds(), CloudSimTags.REGION_SCHEDULING_FINISH,
                 scheduler.getSchedulingDuration());
     }
@@ -139,7 +139,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
 
         Bitstream bitstream = getImageById(vFpgaId);
         List<Mapper> mappersForNextVFpga = new ArrayList<>();
-        for (int i = 0; i < bitstream.getRequiredBlockCount(); i++) {
+        for (int i = 0; i < bitstream.getRequiredRegionCount(); i++) {
             mappersForNextVFpga.add(new Mapper(vFpgaId, row + i + 1));
         }
 

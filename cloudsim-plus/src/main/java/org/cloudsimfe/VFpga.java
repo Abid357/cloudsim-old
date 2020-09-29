@@ -8,7 +8,7 @@ public class VFpga extends AddressableComponent {
     public static int CURRENT_VFPGA_ID = 1;
 
     private int id;
-    private Wrapper wrapper;
+    private Adapter adapter;
     private Accelerator accelerator;
     private List<Region> regions;
     private List<SegmentExecution> segmentExecutionList;
@@ -18,17 +18,17 @@ public class VFpga extends AddressableComponent {
     private double configurationTime;
     private VFpgaManager manager;
 
-    public VFpga(int id, Wrapper wrapper, Region region) {
+    public VFpga(int id, Adapter adapter, Region region) {
         this.id = id;
-        this.wrapper = wrapper;
+        this.adapter = adapter;
         segmentExecutionList = new ArrayList<>();
         regions = new ArrayList<>();
         regions.add(region);
     }
 
-    public VFpga(int id, Wrapper wrapper, List<Region> regions) {
+    public VFpga(int id, Adapter adapter, List<Region> regions) {
         this.id = id;
-        this.wrapper = wrapper;
+        this.adapter = adapter;
         segmentExecutionList = new ArrayList<>();
         this.regions = regions;
     }
@@ -79,7 +79,7 @@ public class VFpga extends AddressableComponent {
     }
 
     public void setAccelerator(Accelerator accelerator) {
-        accelerator.setWrapper(wrapper);
+        accelerator.setAdapter(adapter);
         accelerator.setVFpga(this);
         this.accelerator = accelerator;
     }
@@ -88,8 +88,8 @@ public class VFpga extends AddressableComponent {
         return accelerator;
     }
 
-    public Wrapper getWrapper() {
-        return wrapper;
+    public Adapter getAdapter() {
+        return adapter;
     }
 
     public List<Region> getRegions() {
@@ -98,16 +98,13 @@ public class VFpga extends AddressableComponent {
 
     @Override
     public void sendDataToComponent(Payload payload) {
-//        AccelerableSegment segment = (AccelerableSegment) payload.getData().get(0);
-//        estimatedFinishTime = accelerator.cloudletSubmit(segment, 0.0);
-//        wrapper.writeToOutputBuffer(estimatedFinishTime);
     }
 
     @Override
     public String toString() {
         return "Accelerator{" +
                 "id=" + id +
-                ", wrapper=" + wrapper +
+                ", adapter=" + adapter +
                 ", accelerator=" + accelerator +
                 ", regions=" + regions +
                 ", estimatedFinishTime=" + estimatedFinishTime +

@@ -10,7 +10,7 @@ import java.util.Queue;
  * @author Abid Farhan
  * @version CloudSim Plus 1.0
  */
-public class ConfigurationManager extends AddressableComponent {
+public class ConfigurationManager extends AddressableComponent implements Clockable{
 
     private Fpga fpga;
     private List<Region> regions;
@@ -26,23 +26,6 @@ public class ConfigurationManager extends AddressableComponent {
         regions = new ArrayList<>();
         volatileMemory = new LinkedList<>();
         availabilityList = new ArrayList<>();
-
-//        int height = fabric.height;
-//        int width = fabric.width;
-//
-//        List<Integer> divisorsForRow = new ArrayList<>();
-//        for (int i = 1; i <= height / 2; i++)
-//            if (height % i == 0)
-//                divisorsForRow.add(i);
-//        int rows = divisorsForRow.get(divisorsForRow.size() / 2); // get the middle divisor
-//
-//        List<Integer> divisorsForCol = new ArrayList<>();
-//        for (int i = 1; i <= width / 2; i++)
-//            if (width % i == 0)
-//                divisorsForCol.add(i);
-//        int cols = divisorsForCol.get(divisorsForCol.size() / 2); // get the middle divisor
-//
-//        map = new long[rows][cols];
     }
 
     public void setMap(long[][] map) {
@@ -66,7 +49,7 @@ public class ConfigurationManager extends AddressableComponent {
 
         volatileMemory.add(bitstream);
         List<Region> configuredRegions = doPartialReconfiguration(bitstream, false, mappers);
-        VFpga vFpga = new VFpga(vFpgaId, bitstream.getWrapper(), configuredRegions);
+        VFpga vFpga = new VFpga(vFpgaId, bitstream.getAdapter(), configuredRegions);
         vFpga.setManager(fpga.getVFpgaManager());
         vFpga.setAccelerator(bitstream.getAccelerator());
         fpga.getNetworkManager().sendDataToComponent(new Payload(vFpga));
@@ -85,7 +68,7 @@ public class ConfigurationManager extends AddressableComponent {
 
     public void initialize() {
         if (nonVolatileMemory != null) {
-            int staticRegionCount = nonVolatileMemory.getRequiredBlockCount();
+            int staticRegionCount = nonVolatileMemory.getRequiredRegionCount();
             for (int i = 0; i < staticRegionCount; i++) {
                 int index = getNextAvailableRegionIndex(false);
                 if (index != -1) {
@@ -110,13 +93,13 @@ public class ConfigurationManager extends AddressableComponent {
     // allocation of region in the physical layer, this is decoupled from hypervisor and the virtual layer via the
     // use of the Mapper class
     public List<Region> doPartialReconfiguration(Bitstream bitstream, boolean shouldReplace, List<Mapper> mappers) {
-        List<Region> configuredRegions = new ArrayList<>(bitstream.getRequiredBlockCount());
+        List<Region> configuredRegions = new ArrayList<>(bitstream.getRequiredRegionCount());
         int occupiedBlocks = (int) getDynamicRegions().stream().filter(region -> !region.isAvailable()).count();
         int availableBlocks = getDynamicRegions().size() - occupiedBlocks;
-        if (availableBlocks < bitstream.getRequiredBlockCount() && !shouldReplace)
+        if (availableBlocks < bitstream.getRequiredRegionCount() && !shouldReplace)
             return null;
 
-        for (int i = 0; i < bitstream.getRequiredBlockCount(); i++) {
+        for (int i = 0; i < bitstream.getRequiredRegionCount(); i++) {
             int index = getNextAvailableRegionIndex(shouldReplace);
             if (index == -1)
                 return null;
@@ -164,7 +147,7 @@ public class ConfigurationManager extends AddressableComponent {
 //            List<Region> regions = getRegionsForVFpga(bitstream.getRequiredBlockCount(),
 //                    bitstream.getAccelerator().getId());
 //            if (regions != null) {
-//                Accelerator vFpga = new Accelerator(Accelerator.CURRENT_VFPGA_ID++, bitstream.getWrapper(), regions);
+//                Accelerator vFpga = new Accelerator(Accelerator.CURRENT_VFPGA_ID++, bitstream.getAdapter(), regions);
 //                vFpga.setAccelerator(bitstream.getAccelerator());
 //                fpga.getNetworkManager().sendDataToComponent(vFpga);
 //            } else
@@ -239,5 +222,15 @@ public class ConfigurationManager extends AddressableComponent {
 
     public void setNonVolatileMemory(Bitstream nonVolatileMemory) {
         this.nonVolatileMemory = nonVolatileMemory;
+    }
+
+    @Override
+    public long getClockValue() {
+        return fpga.getClock();
+    }
+
+    @Override
+    public String getComponentId() {
+        return getClass().getSimpleName() + "-FPGA" + fpga.getId();
     }
 }

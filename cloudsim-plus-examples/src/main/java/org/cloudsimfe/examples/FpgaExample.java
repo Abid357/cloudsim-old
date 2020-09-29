@@ -25,7 +25,6 @@ package org.cloudsimfe.examples;
 
 import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
-import org.cloudbus.cloudsim.datacenters.Datacenter;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.hosts.HostSimple;
 import org.cloudbus.cloudsim.resources.Pe;
@@ -100,8 +99,6 @@ public class FpgaExample {
 
         simulation.start();
 
-        System.out.println();
-        System.out.println();
         datacenter0.getFpgaList().get(0).getVFpgaManager().printPerspective(System.out);
 
 //        final List<Cloudlet> finishedCloudlets = broker0.getCloudletFinishedList();
@@ -114,7 +111,39 @@ public class FpgaExample {
     }
 
     public static void main(String[] args) {
-        new FpgaExample();
+//        new FpgaExample();
+        Fpga fpga = new Fpga.Builder(new CloudSim(), 1, new DhcpServer())
+                .setBrand("Altera")
+                .setModel("Stratix V 5SGSD3")
+                .setLogicElements(325000)
+                .setMemoryRegisters(356000)
+                .setBlockedRams(600)
+                .setDspSlices(1800)
+                .setIoPins(450)
+                .setTransceivers(12)
+                .setPhaseLockedLoops(2)
+                .setLength(44)
+                .setWidth(33)
+                .setClock(100)
+                .setStaticRegionCount(STATIC_REGIONS)
+                .build();
+
+        Accelerator accelerator0 = new Accelerator(1, 50, 4, Accelerator.TYPE_ENCRYPTION);
+        accelerator0.setBroker(new DatacenterBrokerFE(new CloudSim(), "123"));
+        Accelerator accelerator1 = new Accelerator(2, 50, 4, Accelerator.TYPE_ENCRYPTION);
+        accelerator1.setClock(20);
+        accelerator1.setBroker(new DatacenterBrokerFE(new CloudSim(), "123"));
+        Accelerator accelerator2 = new Accelerator(3, 50, 4, Accelerator.TYPE_ENCRYPTION);
+        accelerator2.setClock(20);
+        accelerator2.setBroker(new DatacenterBrokerFE(new CloudSim(), "123"));
+        fpga.getClockManager().acquireClockFor(accelerator0);
+        fpga.getClockManager().acquireClockFor(accelerator1);
+        fpga.getClockManager().acquireClockFor(accelerator2);
+        System.out.println(fpga.getClockManager());
+
+        fpga.getClockManager().releaseClockFor(accelerator0);
+        System.out.println(fpga.getClockManager());
+
     }
 
     public Fpga createAndPartitionFpga(int id) {
@@ -167,14 +196,14 @@ public class FpgaExample {
                     ACCELERATOR_CONCURRENCY,
                     Accelerator.TYPE_IMAGE_PROCESSING);
             accelerator0.setBroker(broker0);
-            Bitstream bitstream0 = new Bitstream(new Wrapper(), accelerator0, ACCELERATOR_REQUIRED_REGIONS, 2);
+            Bitstream bitstream0 = new Bitstream(new Adapter(), accelerator0, ACCELERATOR_REQUIRED_REGIONS, 2);
             imageList.add(bitstream0);
         }
 
 //        Accelerator accelerator1 = new Accelerator(Accelerator.CURRENT_ACCELERATOR_ID++, mflops, concurrency,
 //                Accelerator.TYPE_ENCRYPTION);
 //        accelerator1.setBroker(broker0);
-//        Bitstream bitstream1 = new Bitstream(new Wrapper(), accelerator1, 2, 3);
+//        Bitstream bitstream1 = new Bitstream(new Adapter(), accelerator1, 2, 3);
 //        imageList.add(bitstream1);
 
         return imageList;
@@ -230,6 +259,11 @@ public class FpgaExample {
             accelerableCloudlet.addSegment(indexPosition, ACCELERABLE_LENGTH, Accelerator.TYPE_IMAGE_PROCESSING);
             list.add(accelerableCloudlet);
         }
+
+//        AccelerableCloudlet cloudlet = new AccelerableCloudlet(10000, 2);
+//        cloudlet.addSegment(new AccelerableSegment(1, 1000, 5000, cloudlet, Accelerator.TYPE_IMAGE_PROCESSING));
+//        cloudlet.addSegment(new AccelerableSegment(2, 7000, 2000, cloudlet, Accelerator.TYPE_IMAGE_PROCESSING));
+//        cloudlet.visualizeCloudlet();
 
         return list;
     }

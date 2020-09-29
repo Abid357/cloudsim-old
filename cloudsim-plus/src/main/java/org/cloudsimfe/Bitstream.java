@@ -5,31 +5,31 @@ package org.cloudsimfe;
  * @version CloudSim Plus 1.0
  */
 public class Bitstream {
-    private Wrapper wrapper;
+    private Adapter adapter;
     private Accelerator accelerator;
-    private int requiredBlockCount;
+    private int requiredRegionCount;
     private int requiredExecutionTime;
     private int deadline;
 
-    public Bitstream(Wrapper wrapper, Accelerator accelerator, int requiredRegionCount, int requiredExecutionTime) {
-        this(wrapper, accelerator, requiredRegionCount, requiredExecutionTime, 0);
+    public Bitstream(Adapter adapter, Accelerator accelerator, int requiredRegionCount, int requiredExecutionTime) {
+        this(adapter, accelerator, requiredRegionCount, requiredExecutionTime, 0);
     }
 
-    private Bitstream(Wrapper wrapper, Accelerator accelerator, int requiredRegionCount, int requiredExecutionTime,
-                     int deadline) {
-        this.wrapper = wrapper;
+    private Bitstream(Adapter adapter, Accelerator accelerator, int requiredRegionCount, int requiredExecutionTime,
+                      int deadline) {
+        this.adapter = adapter;
         this.accelerator = accelerator;
-        this.requiredBlockCount = requiredRegionCount;
+        this.requiredRegionCount = requiredRegionCount;
         this.requiredExecutionTime = requiredExecutionTime;
         this.deadline = deadline;
     }
 
-    public Wrapper getWrapper() {
-        return wrapper;
+    public Adapter getAdapter() {
+        return adapter;
     }
 
-    public void setWrapper(Wrapper wrapper) {
-        this.wrapper = wrapper;
+    public void setAdapter(Adapter adapter) {
+        this.adapter = adapter;
     }
 
     public Accelerator getAccelerator() {
@@ -40,12 +40,12 @@ public class Bitstream {
         this.accelerator = accelerator;
     }
 
-    public int getRequiredBlockCount() {
-        return requiredBlockCount;
+    public int getRequiredRegionCount() {
+        return requiredRegionCount;
     }
 
-    public void setRequiredBlockCount(int requiredBlockCount) {
-        this.requiredBlockCount = requiredBlockCount;
+    public void setRequiredRegionCount(int requiredRegionCount) {
+        this.requiredRegionCount = requiredRegionCount;
     }
 
     public int getRequiredExecutionTime() {
