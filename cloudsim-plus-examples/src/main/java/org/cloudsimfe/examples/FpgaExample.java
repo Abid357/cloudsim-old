@@ -74,8 +74,9 @@ public class FpgaExample {
     private List<Vm> vmList;
     private List<Cloudlet> cloudletList;
     private DatacenterFE datacenter0;
-    private List<Bitstream> imageList;
+    private List<Accelerator> acceleratorRequests;
     private DhcpServer server;
+    private NetlistStore store;
 
     private FpgaExample() {
         /*Enables just some level of log messages.
@@ -83,6 +84,7 @@ public class FpgaExample {
         //Log.setLevel(ch.qos.logback.classic.Level.WARN);
 
         server = new DhcpServer();
+        store = new NetlistStore();
 
         simulation = new CloudSim();
         datacenter0 = createDatacenter();
@@ -91,15 +93,14 @@ public class FpgaExample {
         broker0 = new DatacenterBrokerFE(simulation, "BrokerFE");
 
         vmList = createVms();
-        imageList = createAcceleratorImages();
+        acceleratorRequests = createAcceleratorRequests();
         cloudletList = createCloudlets();
         broker0.submitVmList(vmList);
         broker0.submitCloudletList(cloudletList);
-        broker0.submitAcceleratorImageList(imageList);
+        broker0.submitAcceleratorRequests(acceleratorRequests);
+        datacenter0.getUnifiedManager().setNetlistStore(store);
 
         simulation.start();
-
-        datacenter0.getFpgaList().get(0).getVFpgaManager().printPerspective(System.out);
 
 //        final List<Cloudlet> finishedCloudlets = broker0.getCloudletFinishedList();
 //        finishedCloudlets.removeIf(cloudlet -> cloudlet.getStatus().equals(Cloudlet.Status.INSTANTIATED));
@@ -111,39 +112,7 @@ public class FpgaExample {
     }
 
     public static void main(String[] args) {
-//        new FpgaExample();
-        Fpga fpga = new Fpga.Builder(new CloudSim(), 1, new DhcpServer())
-                .setBrand("Altera")
-                .setModel("Stratix V 5SGSD3")
-                .setLogicElements(325000)
-                .setMemoryRegisters(356000)
-                .setBlockedRams(600)
-                .setDspSlices(1800)
-                .setIoPins(450)
-                .setTransceivers(12)
-                .setPhaseLockedLoops(2)
-                .setLength(44)
-                .setWidth(33)
-                .setClock(100)
-                .setStaticRegionCount(STATIC_REGIONS)
-                .build();
-
-        Accelerator accelerator0 = new Accelerator(1, 50, 4, Accelerator.TYPE_ENCRYPTION);
-        accelerator0.setBroker(new DatacenterBrokerFE(new CloudSim(), "123"));
-        Accelerator accelerator1 = new Accelerator(2, 50, 4, Accelerator.TYPE_ENCRYPTION);
-        accelerator1.setClock(20);
-        accelerator1.setBroker(new DatacenterBrokerFE(new CloudSim(), "123"));
-        Accelerator accelerator2 = new Accelerator(3, 50, 4, Accelerator.TYPE_ENCRYPTION);
-        accelerator2.setClock(20);
-        accelerator2.setBroker(new DatacenterBrokerFE(new CloudSim(), "123"));
-        fpga.getClockManager().acquireClockFor(accelerator0);
-        fpga.getClockManager().acquireClockFor(accelerator1);
-        fpga.getClockManager().acquireClockFor(accelerator2);
-        System.out.println(fpga.getClockManager());
-
-        fpga.getClockManager().releaseClockFor(accelerator0);
-        System.out.println(fpga.getClockManager());
-
+        new FpgaExample();
     }
 
     public Fpga createAndPartitionFpga(int id) {
@@ -167,6 +136,7 @@ public class FpgaExample {
                 .setPartitionPolicy(partitionPolicy)
                 .setStaticRegionCount(STATIC_REGIONS)
                 .build();
+
         return fpga;
     }
 
@@ -188,16 +158,19 @@ public class FpgaExample {
         return new DatacenterFE(simulation, hostList, fpgaList, server);
     }
 
-    public List<Bitstream> createAcceleratorImages() {
-        List<Bitstream> imageList = new ArrayList<>();
+    public List<Accelerator> createAcceleratorRequests() {
+        List<Accelerator> accelerators = new ArrayList<>();
 
         for (int i = 0; i < ACCELERATORS; i++) {
-            Accelerator accelerator0 = new Accelerator(Accelerator.CURRENT_ACCELERATOR_ID++, ACCELERATOR_CAPACITY_MFLOPS,
+            Accelerator accelerator = new Accelerator(Accelerator.CURRENT_ACCELERATOR_ID++, ACCELERATOR_CAPACITY_MFLOPS,
                     ACCELERATOR_CONCURRENCY,
                     Accelerator.TYPE_IMAGE_PROCESSING);
-            accelerator0.setBroker(broker0);
-            Bitstream bitstream0 = new Bitstream(new Adapter(), accelerator0, ACCELERATOR_REQUIRED_REGIONS, 2);
-            imageList.add(bitstream0);
+            accelerator.setBroker(broker0);
+
+            Netlist netlist = new Netlist(accelerator, ACCELERATOR_REQUIRED_REGIONS, 3, 3);
+            store.addNetlist(netlist);
+
+            accelerators.add(accelerator);
         }
 
 //        Accelerator accelerator1 = new Accelerator(Accelerator.CURRENT_ACCELERATOR_ID++, mflops, concurrency,
@@ -206,7 +179,7 @@ public class FpgaExample {
 //        Bitstream bitstream1 = new Bitstream(new Adapter(), accelerator1, 2, 3);
 //        imageList.add(bitstream1);
 
-        return imageList;
+        return accelerators;
     }
 
     private Host createHost() {

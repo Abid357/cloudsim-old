@@ -28,6 +28,10 @@ public class Accelerator extends CustomerEntityAbstract implements Clockable {
 
     private long clock;
 
+    private int inputChannels;
+
+    private int outputChannels;
+
     /**
      * Million instructions per second (MIPS): a rough estimation of MIPS could be clock frequency
      * divided by cpi. For example, if cpi is 1, then in every clock cyse, one instruction is executed.
@@ -60,14 +64,21 @@ public class Accelerator extends CustomerEntityAbstract implements Clockable {
     private int type;
     private Adapter adapter;
 
-    public Accelerator(final int id, final long mflops, final int concurrency, final int type) {
+    public Accelerator(final int id, final long mflops, final int concurrency, final int type, final long clock,
+                       final int inputChannels, final int outputChannels, final double submissionDelay){
         this.id = id;
         this.mflops = mflops;
         this.concurrency = concurrency;
-        submissionDelay = 0;
-        clock = 50;
-        status = IDLE;
         this.type = type;
+        this.clock = clock;
+        this.inputChannels = inputChannels;
+        this.outputChannels = outputChannels;
+        status = IDLE;
+        this.submissionDelay = submissionDelay;
+    }
+
+    public Accelerator(final int id, final long mflops, final int concurrency, final int type) {
+        this(id, mflops, concurrency, type, 50, 3, 3, 0);
     }
 
     /**
@@ -164,7 +175,7 @@ public class Accelerator extends CustomerEntityAbstract implements Clockable {
         this.clock = clock;
     }
 
-    public long getId() {
+    public int getAcceleratorId() {
         return this.id;
     }
 
@@ -186,6 +197,18 @@ public class Accelerator extends CustomerEntityAbstract implements Clockable {
 
     public int getType() {
         return type;
+    }
+
+    public String getTypeInString(){
+        switch(type){
+            case TYPE_IMAGE_PROCESSING:
+                return "Image Processing";
+            case TYPE_ENCRYPTION:
+                return "Encryption";
+            case TYPE_FAST_FOURIER_TRANSFORM:
+                return "Fast Fourier Transformation (FFT)";
+        }
+        return null;
     }
 
     public void setType(int type) {
@@ -218,5 +241,41 @@ public class Accelerator extends CustomerEntityAbstract implements Clockable {
     @Override
     public String getComponentId() {
         return getClass().getSimpleName() + id;
+    }
+
+    public int getInputChannels() {
+        return inputChannels;
+    }
+
+    public void setInputChannels(int inputChannels) {
+        this.inputChannels = inputChannels;
+    }
+
+    public int getOutputChannels() {
+        return outputChannels;
+    }
+
+    public void setOutputChannels(int outputChannels) {
+        this.outputChannels = outputChannels;
+    }
+
+    public void setMflops(long mflops) {
+        this.mflops = mflops;
+    }
+
+    public double getArrivalTime() {
+        return arrivalTime;
+    }
+
+    @Override
+    public String toString() {
+        return "Accelerator " + id + " specifications:\n" +
+                "Type: " + getTypeInString() + "\n" +
+                "Capacity: " + mflops + " MFLOPS\n" +
+                "Concurrency: " + concurrency + "\n" +
+                "Clock: " + clock + " MHz\n" +
+                "Input Channels: " + inputChannels + "\n" +
+                "Output Channels: " + outputChannels + "\n" +
+                "Status: " + status;
     }
 }

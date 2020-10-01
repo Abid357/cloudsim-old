@@ -68,7 +68,7 @@ import java.util.stream.IntStream;
 import static org.cloudbus.cloudsim.utilizationmodels.UtilizationModel.Unit;
 
 /**
- * An example showing how to create Cloudlets (tasks) from a Google Task Events
+ * An example showing how to create Cloudlets (tasks) from a Google ConfigurationTask Events
  * Trace using a {@link GoogleTaskEventsTraceReader}. Then it uses a
  * {@link GoogleTaskUsageTraceReader} to read "task usage" trace files that
  * define how the created Cloudlets will use resources along the time.
@@ -108,7 +108,7 @@ public class GoogleTaskEventsExample1 {
     private static final double HOST_MIPS = 1000;
 
     /**
-     * Defines a negative length for Cloudlets created from the Google Task Events Trace file
+     * Defines a negative length for Cloudlets created from the Google ConfigurationTask Events Trace file
      * so that they can run indefinitely until a {@link CloudSimTags#CLOUDLET_FINISH}
      * event is received by the {@link DatacenterBroker}.
      * Check out {@link Cloudlet#setLength(long)} for details.
@@ -279,7 +279,7 @@ public class GoogleTaskEventsExample1 {
         final List<Cloudlet> list = broker.getCloudletFinishedList();
         list.sort(Comparator.comparingLong(Cloudlet::getId));
         new CloudletsTableBuilder(list)
-            .addColumn(0, new TextTableColumn("Task", "ID"), Cloudlet::getJobId)
+            .addColumn(0, new TextTableColumn("ConfigurationTask", "ID"), Cloudlet::getJobId)
             .addColumn(7, new TextTableColumn("VM Size", "MB"), this::getVmSize)
             .addColumn(8, new TextTableColumn("Cloudlet Size", "MB"), this::getCloudletSizeInMB)
             .addColumn(10, new TextTableColumn("Waiting Time", "Seconds").setFormat("%.0f"), Cloudlet::getWaitingTime)

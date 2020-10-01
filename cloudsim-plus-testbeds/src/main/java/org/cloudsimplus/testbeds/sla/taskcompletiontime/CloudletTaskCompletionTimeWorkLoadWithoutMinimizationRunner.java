@@ -43,12 +43,12 @@ class CloudletTaskCompletionTimeWorkLoadWithoutMinimizationRunner extends Experi
     static final int[] VM_PES = {2, 4};
 
     /**
-     * The Task Completion Time average for all the experiments.
+     * The ConfigurationTask Completion Time average for all the experiments.
      */
     private List<Double> cloudletCompletionTime;
 
      /**
-     * The percentage of cloudlets meeting Task Completion Time average for all the experiments.
+     * The percentage of cloudlets meeting ConfigurationTask Completion Time average for all the experiments.
      */
     private List<Double> percentageOfCloudletsMeetingTaskCompletionTime;
 
@@ -114,8 +114,8 @@ class CloudletTaskCompletionTimeWorkLoadWithoutMinimizationRunner extends Experi
     @Override
     protected Map<String, List<Double>> createMetricsMap() {
         Map<String, List<Double>> map = new HashMap<>();
-        map.put("Cloudlet Task Completion Time", cloudletCompletionTime);
-        map.put("Percentage Of Cloudlets Meeting the Task Completion Time", percentageOfCloudletsMeetingTaskCompletionTime);
+        map.put("Cloudlet ConfigurationTask Completion Time", cloudletCompletionTime);
+        map.put("Percentage Of Cloudlets Meeting the ConfigurationTask Completion Time", percentageOfCloudletsMeetingTaskCompletionTime);
         map.put("Average of vPEs/CloudletsPEs", ratioOfVmPesToRequiredCloudletPesList);
         return map;
     }
@@ -151,7 +151,7 @@ class CloudletTaskCompletionTimeWorkLoadWithoutMinimizationRunner extends Experi
         double lower = stats.getMean() - intervalSize;
         double upper = stats.getMean() + intervalSize;
         System.out.printf(
-                "\tTask Completion Time mean 95%% Confidence Interval: %.2f ∓ %.2f, that is [%.2f to %.2f]%n",
+                "\tConfigurationTask Completion Time mean 95%% Confidence Interval: %.2f ∓ %.2f, that is [%.2f to %.2f]%n",
                 stats.getMean(), intervalSize, lower, upper);
         System.out.printf("\tStandard Deviation: %.2f%n", stats.getStandardDeviation());
     }

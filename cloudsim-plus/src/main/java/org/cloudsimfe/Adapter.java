@@ -10,10 +10,22 @@ public class Adapter {
 
     private Queue<Payload> readBuffer;
     private Queue<Payload> writeBuffer;
+    private int inputChannels;
+    private int outputChannels;
+
+    public Adapter(Queue<Payload> readBuffer, Queue<Payload> writeBuffer, int inputChannels, int outputChannels) {
+        this.readBuffer = readBuffer;
+        this.writeBuffer = writeBuffer;
+        this.inputChannels = inputChannels;
+        this.outputChannels = outputChannels;
+    }
+
+    public Adapter(int inputChannels, int outputChannels){
+        this(new LinkedList<>(), new LinkedList<>(), inputChannels, outputChannels);
+    }
 
     public Adapter() {
-        readBuffer = new LinkedList<>();
-        writeBuffer = new LinkedList<>();
+        this( 3, 3);
     }
 
     public void writeToBuffer(Payload payload, int bufferOption) {

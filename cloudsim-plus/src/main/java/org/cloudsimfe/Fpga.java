@@ -47,7 +47,7 @@ import java.util.List;
  * @see org.cloudsimfe.Accelerator
  * @see org.cloudsimfe.Packet
  */
-public class Fpga implements Clockable {
+public class Fpga {
 
     /**
      * A static counter to automate ID generation of the FPGAs
@@ -325,11 +325,6 @@ public class Fpga implements Clockable {
         return id;
     }
 
-    @Override
-    public String getComponentId() {
-        return "FPGA" + id;
-    }
-
     public String getBrand() {
         return brand;
     }
@@ -392,11 +387,6 @@ public class Fpga implements Clockable {
 
     public VFpgaManager getVFpgaManager() {
         return vFpgaManager;
-    }
-
-    @Override
-    public long getClockValue() {
-        return clock;
     }
 
     /**
@@ -470,7 +460,7 @@ public class Fpga implements Clockable {
             configurationManager.setFpga(fpga);
             configurationManager.setPartitionPolicy(partitionPolicy);
             configurationManager.doPartition();
-            configurationManager.setNonVolatileMemory(new Bitstream(null, null, staticRegionCount, -1));
+            configurationManager.setNonVolatileMemory(new Bitstream(null, null, staticRegionCount));
             networkManager.setFpga(fpga);
             networkManager.sendDataToComponent(new Payload(configurationManager));
             vFpgaManager.setFpga(fpga);
@@ -478,7 +468,6 @@ public class Fpga implements Clockable {
             clockManager.setFpga(fpga);
             clockManager.setClock(clock);
             clockManager.setMaxCount(pll);
-            clockManager.acquireClockFor(fpga);
             clockManager.acquireClockFor(networkManager);
             clockManager.acquireClockFor(configurationManager);
             clockManager.acquireClockFor(vFpgaManager);

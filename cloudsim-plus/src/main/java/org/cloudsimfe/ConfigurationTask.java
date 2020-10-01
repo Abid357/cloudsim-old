@@ -1,9 +1,9 @@
 package org.cloudsimfe;
 
 
-public class Task {
+public class ConfigurationTask {
 
-    public static int JOB_ID = 1;
+    public static int TASK_ID = 1;
 
     /*
      * task ID: starts from 1 to K where K is total number of tasks
@@ -25,7 +25,7 @@ public class Task {
      */
     private int deadline;
 
-    public Task(int id, int tile, int executionTime, int deadline) {
+    public ConfigurationTask(int id, int tile, int executionTime, int deadline) {
         super();
         this.id = id;
         this.tile = tile;

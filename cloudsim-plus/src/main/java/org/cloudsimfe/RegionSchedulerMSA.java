@@ -19,7 +19,7 @@ public class RegionSchedulerMSA implements RegionScheduler {
     public static int ITERATION_THRESHOLD = 6;
     public static double TEMP = 10000;
     public static double COOLING_RATE = 0.001;
-    private static List<Task> tasks;
+    private static List<ConfigurationTask> tasks;
     private static int NUM_OF_REGIONS;
     private static int NUM_OF_FPGAS;
     private static int NUM_OF_TASKS;
@@ -56,7 +56,7 @@ public class RegionSchedulerMSA implements RegionScheduler {
         NUM_OF_FPGAS = fpgaCount;
         NUM_OF_REGIONS = regionCount;
 
-        this.tasks = (List<Task>) tasks;
+        this.tasks = (List<ConfigurationTask>) tasks;
         NUM_OF_TASKS = RegionSchedulerMSA.tasks.size();
 
         simulate();
@@ -113,9 +113,9 @@ public class RegionSchedulerMSA implements RegionScheduler {
 
     private void simulate() {
         // sort task based on earliest deadline first algorithm
-        Collections.sort(tasks, new Comparator<Task>() {
+        Collections.sort(tasks, new Comparator<ConfigurationTask>() {
             @Override
-            public int compare(Task lhs, Task rhs) {
+            public int compare(ConfigurationTask lhs, ConfigurationTask rhs) {
                 return lhs.getDeadline() - rhs.getDeadline();
             }
         });
@@ -133,8 +133,8 @@ public class RegionSchedulerMSA implements RegionScheduler {
         int bestEnergy = getCompletionTime(bestSolution);
         initialSolution = currentSolution;
 
-        List<Task> newTasks = new ArrayList<Task>(tasks);
-        List<Task> prevTasks = new ArrayList<Task>(newTasks);
+        List<ConfigurationTask> newTasks = new ArrayList<ConfigurationTask>(tasks);
+        List<ConfigurationTask> prevTasks = new ArrayList<ConfigurationTask>(newTasks);
 
         double temp = TEMP;
         double rate = COOLING_RATE;
@@ -149,7 +149,7 @@ public class RegionSchedulerMSA implements RegionScheduler {
                 int pos2 = (int) (newTasks.size() * Math.random());
 
                 // swap tasks based on positions
-                Task tempTask = newTasks.get(pos1);
+                ConfigurationTask tempTask = newTasks.get(pos1);
                 newTasks.set(pos1, newTasks.get(pos2));
                 newTasks.set(pos2, tempTask);
 
@@ -160,10 +160,10 @@ public class RegionSchedulerMSA implements RegionScheduler {
 
                 // if violates deadline constraint, do not consider neighbor
                 if (neighbourEnergy == -1) {
-                    newTasks = new ArrayList<Task>(prevTasks);
+                    newTasks = new ArrayList<ConfigurationTask>(prevTasks);
                     continue;
                 }
-                prevTasks = new ArrayList<Task>(newTasks);
+                prevTasks = new ArrayList<ConfigurationTask>(newTasks);
 
                 // decide if we should accept the neighbor
                 if (acceptanceProbability(currentEnergy, neighbourEnergy) > Math.random()) {
@@ -198,7 +198,7 @@ public class RegionSchedulerMSA implements RegionScheduler {
 
     private int getTMax() {
         if (!tasks.isEmpty())
-            return tasks.stream().mapToInt(Task::getExecutionTime).sum();
+            return tasks.stream().mapToInt(ConfigurationTask::getExecutionTime).sum();
         else
             return -1;
     }
@@ -214,7 +214,7 @@ public class RegionSchedulerMSA implements RegionScheduler {
         return 0;
     }
 
-    private int[] allocate(List<Task> tasks, boolean initialFlag) {
+    private int[] allocate(List<ConfigurationTask> tasks, boolean initialFlag) {
         int[] x = new int[T_MAX * NUM_OF_REGIONS];
         for (int k = 0; k < tasks.size(); k++) {
             int id = tasks.get(k).getId();

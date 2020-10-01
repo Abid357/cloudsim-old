@@ -8,20 +8,11 @@ public class Bitstream {
     private Adapter adapter;
     private Accelerator accelerator;
     private int requiredRegionCount;
-    private int requiredExecutionTime;
-    private int deadline;
 
-    public Bitstream(Adapter adapter, Accelerator accelerator, int requiredRegionCount, int requiredExecutionTime) {
-        this(adapter, accelerator, requiredRegionCount, requiredExecutionTime, 0);
-    }
-
-    private Bitstream(Adapter adapter, Accelerator accelerator, int requiredRegionCount, int requiredExecutionTime,
-                      int deadline) {
+    public Bitstream(Adapter adapter, Accelerator accelerator, int requiredRegionCount) {
         this.adapter = adapter;
         this.accelerator = accelerator;
         this.requiredRegionCount = requiredRegionCount;
-        this.requiredExecutionTime = requiredExecutionTime;
-        this.deadline = deadline;
     }
 
     public Adapter getAdapter() {
@@ -48,19 +39,4 @@ public class Bitstream {
         this.requiredRegionCount = requiredRegionCount;
     }
 
-    public int getRequiredExecutionTime() {
-        return requiredExecutionTime;
-    }
-
-    public void setRequiredExecutionTime(int requiredExecutionTime) {
-        this.requiredExecutionTime = requiredExecutionTime;
-    }
-
-    public int getDeadline() {
-        return deadline;
-    }
-
-    public void setDeadline(int deadline) {
-        this.deadline = deadline;
-    }
 }

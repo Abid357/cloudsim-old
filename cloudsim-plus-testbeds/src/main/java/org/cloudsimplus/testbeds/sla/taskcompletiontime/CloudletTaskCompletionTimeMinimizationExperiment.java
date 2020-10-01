@@ -50,7 +50,7 @@ import static org.cloudsimplus.testbeds.sla.taskcompletiontime.CloudletTaskCompl
 /**
  * An experiment that tries to minimize task completion time
  * by selecting as the VM to run a Cloudlet,
- * one that minimizes the Task Completion Time (TCT): the time a cloudlet spends to finish.
+ * one that minimizes the ConfigurationTask Completion Time (TCT): the time a cloudlet spends to finish.
  *
  * <p>
  * It uses the {@link DatacenterBroker#setVmMapper(Function)}
@@ -242,7 +242,7 @@ final class CloudletTaskCompletionTimeMinimizationExperiment extends AbstractClo
     }
 
     /**
-     * Gets the Task Completion Time (TCT) defined in a {@link DatacenterBroker}'s {@link SlaContract}.
+     * Gets the ConfigurationTask Completion Time (TCT) defined in a {@link DatacenterBroker}'s {@link SlaContract}.
      * @param broker the {@link DatacenterBroker} to the TCT from the {@link SlaContract}
      * @return the broker SLA's TCT
      * @see #contractsMap
@@ -297,7 +297,7 @@ final class CloudletTaskCompletionTimeMinimizationExperiment extends AbstractClo
         exp.setVerbose(true);
         exp.run();
         System.out.println();
-        System.out.printf("Average Task Completion Time (TCT): %.2f seconds%n", exp.getTaskCompletionTimeAverage());
+        System.out.printf("Average ConfigurationTask Completion Time (TCT): %.2f seconds%n", exp.getTaskCompletionTimeAverage());
         for (DatacenterBroker broker : exp.getBrokerList()) {
             System.out.printf("%s SLA's TCT: %.2f seconds%n", broker, exp.getTaskCompletionTimeFromContract(broker));
         }

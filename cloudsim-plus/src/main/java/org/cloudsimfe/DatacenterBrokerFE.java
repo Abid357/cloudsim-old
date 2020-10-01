@@ -7,28 +7,11 @@ package org.cloudsimfe;/*
  */
 
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
-import org.cloudbus.cloudsim.brokers.DatacenterBrokerAbstract;
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple;
-import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.*;
-import org.cloudbus.cloudsim.core.events.CloudSimEvent;
 import org.cloudbus.cloudsim.core.events.SimEvent;
-import org.cloudbus.cloudsim.datacenters.Datacenter;
-import org.cloudbus.cloudsim.datacenters.TimeZoned;
-import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletScheduler;
-import org.cloudbus.cloudsim.utilizationmodels.UtilizationModel;
-import org.cloudbus.cloudsim.vms.Vm;
-import org.cloudbus.cloudsim.vms.VmGroup;
-import org.cloudbus.cloudsim.vms.VmSimple;
-import org.cloudsimplus.autoscaling.VerticalVmScaling;
-import org.cloudsimplus.listeners.DatacenterBrokerEventInfo;
-import org.cloudsimplus.listeners.EventInfo;
-import org.cloudsimplus.listeners.EventListener;
-import org.cloudsimplus.traces.google.GoogleTaskEventsTraceReader;
 
 import java.util.*;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static java.util.Comparator.comparing;
 import static java.util.Objects.requireNonNull;
@@ -42,7 +25,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class DatacenterBrokerFE extends DatacenterBrokerSimple {
 
-    private final List<Bitstream> imageList;
+    private final List<Accelerator> acceleratorRequests;
 
     /**
      * Creates a DatacenterBroker giving a specific name.
@@ -54,24 +37,24 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
      */
     public DatacenterBrokerFE(CloudSim simulation, String name) {
         super(simulation, name);
-        this.imageList = new ArrayList<>();
+        this.acceleratorRequests = new ArrayList<>();
     }
 
     @Override
     public void startEntity() {
         super.startEntity();
 
-        if (!imageList.isEmpty()) {
+        if (!acceleratorRequests.isEmpty()) {
             LOGGER.info(
                     "{}: {}: List of {} accelerators submitted to the broker during simulation execution. " +
                             "Accelerators creation request sent to Datacenter.",
-                    getSimulation().clockStr(), getName(), imageList.size());
+                    getSimulation().clockStr(), getName(), acceleratorRequests.size());
         }
 
     }
 
-    public DatacenterBroker submitAcceleratorImageList(final List<Bitstream> bitstreams) {
-        imageList.addAll(bitstreams);
+    public DatacenterBroker submitAcceleratorRequests(final List<Accelerator> accelerators) {
+        acceleratorRequests.addAll(accelerators);
         return this;
     }
 
@@ -86,15 +69,15 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
     private int requestAcceleratorCreation() {
         DatacenterFE datacenter = (DatacenterFE) getDatacenterList().get(0);
         double submissionDelay =
-                imageList.stream().max(comparing(bitstream -> bitstream.getAccelerator().getSubmissionDelay())).get().getAccelerator().getSubmissionDelay();
+                acceleratorRequests.stream().max(comparing(accelerator -> accelerator.getSubmissionDelay())).get().getSubmissionDelay();
 
         LOGGER.info(
                 "{}: {}: Invoking region scheduler in {}",
                 getSimulation().clockStr(), getName(), datacenter.getName());
         send(datacenter.getUnifiedManager(), submissionDelay, CloudSimTags.SCHEDULE_PARTITIONED_REGIONS,
-                imageList);
+                acceleratorRequests);
 
-        imageList.forEach(bitstream -> bitstream.getAccelerator().setLastTriedDatacenter(datacenter));
-        return imageList.size();
+        acceleratorRequests.forEach(accelerator -> accelerator.setLastTriedDatacenter(datacenter));
+        return acceleratorRequests.size();
     }
 }

@@ -214,7 +214,7 @@ class CloudletTaskCompletionTimeWorkLoadMinimizationExperiment extends AbstractC
         final double mean = super.getTaskCompletionTimeAverage();
 
         System.out.printf(
-                "\t\t%nTask Completion Time simulation: %.2f%nSLA's Max Task Completion Time: %.2f%n",
+                "\t\t%nTask Completion Time simulation: %.2f%nSLA's Max ConfigurationTask Completion Time: %.2f%n",
                 mean, getSlaMaxTaskCompletionTime(getFirstBroker()));
         return mean;
     }

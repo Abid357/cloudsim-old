@@ -73,10 +73,10 @@ abstract class AbstractCloudletTaskCompletionTimeExperiment extends Experiment {
     }
 
     /**
-     * Computes the Task Completion Time average for all finished Cloudlets on this
+     * Computes the ConfigurationTask Completion Time average for all finished Cloudlets on this
      * experiment.
      *
-     * @return the Task Completion Time average
+     * @return the ConfigurationTask Completion Time average
      */
     protected double getTaskCompletionTimeAverage() {
         final SummaryStatistics cloudletTaskCompletionTime = new SummaryStatistics();

@@ -44,7 +44,7 @@ class CloudletTaskCompletionTimeWorkLoadMinimizationRunner extends ExperimentRun
     public static final int CLOUDLETS = 300;
 
     /**
-     * The Task Completion Time average for all the experiments.
+     * The ConfigurationTask Completion Time average for all the experiments.
      */
     private List<Double> cloudletsCompletionTime;
 
@@ -112,8 +112,8 @@ class CloudletTaskCompletionTimeWorkLoadMinimizationRunner extends ExperimentRun
     @Override
     protected Map<String, List<Double>> createMetricsMap() {
         final Map<String, List<Double>> map = new HashMap<>();
-        map.put("Task Completion Time", cloudletsCompletionTime);
-        map.put("Percentage Of Cloudlets Meeting Task Completion Time", percentOfCloudletsMeetingCompletionTime);
+        map.put("ConfigurationTask Completion Time", cloudletsCompletionTime);
+        map.put("Percentage Of Cloudlets Meeting ConfigurationTask Completion Time", percentOfCloudletsMeetingCompletionTime);
         map.put("Average of vPEs/CloudletsPEs", ratioOfVmPesToRequiredCloudletPesList);
         return map;
     }
@@ -148,7 +148,7 @@ class CloudletTaskCompletionTimeWorkLoadMinimizationRunner extends ExperimentRun
         final double lower = stats.getMean() - intervalSize;
         final double upper = stats.getMean() + intervalSize;
         System.out.printf(
-                "\tTask Completion Time mean 95%% Confidence Interval: %.2f ∓ %.2f, that is [%.2f to %.2f]%n",
+                "\tConfigurationTask Completion Time mean 95%% Confidence Interval: %.2f ∓ %.2f, that is [%.2f to %.2f]%n",
                 stats.getMean(), intervalSize, lower, upper);
         System.out.printf("\tStandard Deviation: %.2f%n", stats.getStandardDeviation());
     }

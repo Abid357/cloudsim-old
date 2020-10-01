@@ -114,7 +114,7 @@ public class NetworkCloudlet extends CloudletSimple {
     }
 
     /**
-     * Checks if the some Cloudlet Task has started yet.
+     * Checks if the some Cloudlet ConfigurationTask has started yet.
      *
      * @return true if some task has started, false otherwise
      */
@@ -193,7 +193,7 @@ public class NetworkCloudlet extends CloudletSimple {
      * Adds a task to the {@link #getTasks() task list}
      * and links the task to the NetworkCloudlet.
      *
-     * @param task Task to be added
+     * @param task ConfigurationTask to be added
      * @return the NetworkCloudlet instance
      */
     public NetworkCloudlet addTask(final CloudletTask task) {

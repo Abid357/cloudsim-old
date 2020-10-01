@@ -60,7 +60,7 @@ class TaskData extends MachineDataAbstract {
 
     /**
      * An unique ID to be used to identify Cloudlets.
-     * The ID is composed of the {@link #getJobId() Task ID}, concatenated with the {@link #getTaskIndex() Task Index}.
+     * The ID is composed of the {@link #getJobId() ConfigurationTask ID}, concatenated with the {@link #getTaskIndex() ConfigurationTask Index}.
      * @return
      */
     public long getUniqueTaskId(){

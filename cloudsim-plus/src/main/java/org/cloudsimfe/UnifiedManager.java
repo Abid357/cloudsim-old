@@ -21,10 +21,11 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
     private List<AccelerableSegment> submittedSegmentList;
     private List<AccelerableSegment> finishedSegmentList;
     private List<SegmentExecution> segmentExecutionList;
-    private List<Bitstream> imageList;
+    private List<Accelerator> accelerators;
     private String ipAddress;
     private RegionScheduler scheduler;
     private DecimalFormat format;
+    private NetlistStore store;
 
     public UnifiedManager(Simulation simulation, List<VFpgaManager> vFpgaManagers) {
         super(simulation);
@@ -45,10 +46,6 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         this.datacenter = datacenter;
     }
 
-    public Bitstream getImageByJobId(int jobId) {
-        return imageList.get(jobId - 1);
-    }
-
     public boolean submitAccelerableSegments(List<AccelerableSegment> segments) {
         for (AccelerableSegment segment : segments)
             if (!waitingSegmentList.contains(segment))
@@ -66,10 +63,6 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         if (nextSimulationTime != Double.MAX_VALUE)
             send(this, nextSimulationTime, CloudSimTags.VFPGA_UPDATE_SEGMENT_PROCESSING);
         return nextSimulationTime;
-    }
-
-    public Bitstream getImageById(int id) {
-        return imageList.get(id - 1);
     }
 
     public void updateHypervisors(int timeSlots, int[] bestSolution) {
@@ -102,26 +95,31 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
     }
 
     private void processRegionScheduling(SimEvent evt) {
-        this.imageList = (List<Bitstream>) evt.getData();
+        accelerators = (List<Accelerator>) evt.getData();
 
         if (vFpgaManagers.isEmpty()){
             sendNow(datacenter, CloudSimTags.REGION_SCHEDULING_FAIL);
             return;
         }
 
-        List<Task> tasks = new ArrayList<>();
-        for (Bitstream bitstream : imageList) {
-            int id = Task.JOB_ID++;
-            int tile = bitstream.getRequiredRegionCount();
-            int executionTime = bitstream.getRequiredExecutionTime();
-            int deadline = bitstream.getDeadline();
-            tasks.add(new Task(id, tile, executionTime, deadline));
+        List<ConfigurationTask> tasks = new ArrayList<>();
+        for (Accelerator accelerator : accelerators) {
+            Netlist netlist = store.getNetlist(accelerator.getAcceleratorId());
+            int id = ConfigurationTask.TASK_ID++;
+            int tile = netlist.getRequiredRegionCount();
+            int executionTime = netlist.getRequiredExecutionTime();
+            int deadline = netlist.getDeadline();
+            tasks.add(new ConfigurationTask(id, tile, executionTime, deadline));
         }
 
         int regionCount = getTotalRegionCount();
         scheduler.scheduleRegions(vFpgaManagers.size(), regionCount, tasks);
         send(datacenter, getSchedulingDurationInSeconds(), CloudSimTags.REGION_SCHEDULING_FINISH,
                 scheduler.getSchedulingDuration());
+    }
+
+    public void setNetlistStore(NetlistStore store) {
+        this.store = store;
     }
 
     public int getTotalRegionCount() {
@@ -133,11 +131,14 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
 
     private void processReconfigurationRequest(SimEvent evt) {
         Payload payload = (Payload) evt.getData();
-        int vFpgaId = ((Integer) payload.getData().get(0)).intValue();
-        int row = ((Integer) payload.getData().get(1)).intValue();
+        int vFpgaId = (Integer) payload.getData().get(0);
+        int row = (Integer) payload.getData().get(1);
         VFpgaManager vFpgaManager = (VFpgaManager) payload.getData().get(2);
 
-        Bitstream bitstream = getImageById(vFpgaId);
+        Netlist netlist = store.getNetlist(vFpgaId);
+        Adapter adapter = new Adapter(netlist.getAccelerator().getInputChannels(), netlist.getAccelerator().getOutputChannels());
+
+        Bitstream bitstream = new Bitstream(adapter, netlist.getAccelerator(), netlist.getRequiredRegionCount());
         List<Mapper> mappersForNextVFpga = new ArrayList<>();
         for (int i = 0; i < bitstream.getRequiredRegionCount(); i++) {
             mappersForNextVFpga.add(new Mapper(vFpgaId, row + i + 1));
