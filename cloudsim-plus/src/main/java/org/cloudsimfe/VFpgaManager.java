@@ -53,6 +53,30 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
         send(this, vFpga.getConfigurationTime(), CloudSimTags.VFPGA_RECONFIGURATION_FINISH, payload);
     }
 
+    public void createVFpga(List<Region> regions, double configurationTime, Payload payload){
+        Bitstream bitstream = (Bitstream) payload.getData().get(0);
+        List<Mapper> vFpgaMappers = (List<Mapper>) payload.getData().get(1);
+        int vFpgaId = (Integer) payload.getData().get(2);
+        String srcAddress = (String) payload.getData().get(3);
+
+        VFpga vFpga = new VFpga(vFpgaId, bitstream.getAdapter(), regions);
+        vFpga.setManager(fpga.getVFpgaManager());
+        vFpga.setAccelerator(bitstream.getAccelerator());
+        vFpga.setConfigurationTime(configurationTime);
+
+        for (Mapper mapper : vFpgaMappers)
+            availableBlocks.set(mapper.getBlockInHypervisor(), false);
+        mappers.addAll(vFpgaMappers);
+        createdVFpgas.add(vFpga);
+        vFpga.setCreatedAt(getSimulation().clock());
+
+        Payload ethernetPayload = new Payload();
+        ethernetPayload.addData(vFpga);
+        ethernetPayload.addData(srcAddress);
+
+        send(this, vFpga.getConfigurationTime(), CloudSimTags.VFPGA_RECONFIGURATION_FINISH, ethernetPayload);
+    }
+
     public void registerVFpga(VFpga vFpga, List<Mapper> vFpgaMappers) {
         for (Mapper mapper : vFpgaMappers)
             availableBlocks.set(mapper.getBlockInHypervisor(), false);
@@ -275,11 +299,6 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
 
     public void processReconfigurationFinish(SimEvent evt){
         Payload payload = (Payload) evt.getData();
-        VFpga vFpga = (VFpga) payload.getData().get(0);
-        List<Mapper> vFpgaMappers = (List<Mapper>) payload.getData().get(1);
-        registerVFpga(vFpga, vFpgaMappers);
-
-        payload.removeData(1);
         fpga.getNetworkManager().sendDataToComponent(payload);
     }
 

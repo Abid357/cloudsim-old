@@ -44,26 +44,16 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
     public void sendDataToComponent(Payload payload) {
         Bitstream bitstream = (Bitstream) payload.getData().get(0);
         List<Mapper> mappers = (List<Mapper>) payload.getData().get(1);
-        int vFpgaId = ((Integer) payload.getData().get(2)).intValue();
-        String srcAddress = (String) payload.getData().get(3);
 
         volatileMemory.add(bitstream);
         List<Region> configuredRegions = doPartialReconfiguration(bitstream, false, mappers);
-        VFpga vFpga = new VFpga(vFpgaId, bitstream.getAdapter(), configuredRegions);
-        vFpga.setManager(fpga.getVFpgaManager());
-        vFpga.setAccelerator(bitstream.getAccelerator());
-        fpga.getNetworkManager().sendDataToComponent(new Payload(vFpga));
+
+        fpga.getClockManager().acquireClockFor(bitstream.getAccelerator());
 
         //TODO: find a more stable formula for calculating configuration time from literature
         double configurationTime = configuredRegions.size() * 0.5;
-        vFpga.setConfigurationTime(configurationTime);
 
-        Payload internalPayload = new Payload();
-        internalPayload.addData(vFpga);
-        internalPayload.addData(mappers);
-        internalPayload.addData(srcAddress);
-
-        fpga.getVFpgaManager().notify(internalPayload);
+        fpga.getVFpgaManager().createVFpga(configuredRegions, configurationTime, payload);
     }
 
     public void initialize() {

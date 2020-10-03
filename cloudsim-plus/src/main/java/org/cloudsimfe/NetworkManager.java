@@ -104,13 +104,11 @@ public class NetworkManager extends AddressableComponent implements Clockable {
             }
             break;
             case "VFpga": {
-                if (payload.getData().size() == 1) {
                     VFpga vFpga = (VFpga) payload.getData().get(0);
                     vFpga.assignIpAddress(server.requestIpAddress());
                     server.sendAck(vFpga.getIpAddress());
                     registerRoute(vFpga.getIpAddress(), vFpga.getManager());
-                } else if (payload.getData().size() == 2) {
-                    VFpga vFpga = (VFpga) payload.getData().get(0);
+
                     String dstAddress = (String) payload.getData().get(1);
                     payload.removeData(1);
 
@@ -119,7 +117,6 @@ public class NetworkManager extends AddressableComponent implements Clockable {
                     Packet packet = new Packet(NETWORK_MANAGER_ADDRESS, dstAddress, Packet.VFPGA_INFO, payload);
                     router.writeToBuffer(new Payload(packet));
                     router.route(dstAddress);
-                }
             }
             break;
             case "SegmentExecution": {
