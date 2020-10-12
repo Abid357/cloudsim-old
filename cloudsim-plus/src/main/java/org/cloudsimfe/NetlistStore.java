@@ -21,4 +21,12 @@ public class NetlistStore {
                 .findFirst()
                 .get();
     }
+
+    public int hasAcceleratorType(int type){
+        Netlist found =  netlists.stream()
+                .filter(netlist -> netlist.getAccelerator().getType() == type)
+                .findFirst()
+                .orElse(null);
+        return found == null ? -1 : found.getAccelerator().getAcceleratorId();
+    }
 }

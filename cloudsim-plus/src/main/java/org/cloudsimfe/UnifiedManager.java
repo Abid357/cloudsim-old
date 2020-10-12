@@ -65,10 +65,15 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         return nextSimulationTime;
     }
 
-    public void updateHypervisors(int timeSlots, int[] bestSolution) {
+    public void updateHypervisors(int timeSlots, int[] bestSolution, List<ConfigurationTask> tasks) {
         int b = 0;
         int regionCount = getTotalRegionCount();
 
+        for (ConfigurationTask task : tasks) {
+            for (VFpgaManager vFpgaManager : vFpgaManagers) {
+                vFpgaManager.addVFpgaToAcceleratorMapping(task.getId(), task.getAcceleratorId());
+            }
+        }
         for (VFpgaManager vFpgaManager : vFpgaManagers) {
             vFpgaManager.createTiles();
             vFpgaManager.setUnifiedManager(this);
@@ -97,7 +102,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
     private void processRegionScheduling(SimEvent evt) {
         accelerators = (List<Accelerator>) evt.getData();
 
-        if (vFpgaManagers.isEmpty()){
+        if (vFpgaManagers.isEmpty()) {
             sendNow(datacenter, CloudSimTags.REGION_SCHEDULING_FAIL);
             return;
         }
@@ -109,11 +114,11 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
             int tile = netlist.getRequiredRegionCount();
             int executionTime = netlist.getRequiredExecutionTime();
             int deadline = netlist.getDeadline();
-            tasks.add(new ConfigurationTask(id, tile, executionTime, deadline));
+            tasks.add(new ConfigurationTask(id, accelerator.getAcceleratorId(), tile, executionTime, deadline));
         }
 
         int regionCount = getTotalRegionCount();
-        scheduler.scheduleRegions(vFpgaManagers.size(), regionCount, tasks);
+        scheduler.schedule(vFpgaManagers.size(), regionCount, tasks);
         send(datacenter, getSchedulingDurationInSeconds(), CloudSimTags.REGION_SCHEDULING_FINISH,
                 scheduler.getSchedulingDuration());
     }
@@ -134,10 +139,13 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         int vFpgaId = (Integer) payload.getData().get(0);
         int row = (Integer) payload.getData().get(1);
         VFpgaManager vFpgaManager = (VFpgaManager) payload.getData().get(2);
+        int acceleratorId = vFpgaManager.getVFpgaToAcceleratorMapping(vFpgaId);
 
-        Netlist netlist = store.getNetlist(vFpgaId);
-        Adapter adapter = new Adapter(netlist.getAccelerator().getInputChannels(), netlist.getAccelerator().getOutputChannels());
+        Netlist netlist = store.getNetlist(acceleratorId);
+        Adapter adapter = new Adapter(netlist.getAccelerator().getInputChannels(),
+                netlist.getAccelerator().getOutputChannels());
 
+        // bitstream generation
         Bitstream bitstream = new Bitstream(adapter, netlist.getAccelerator(), netlist.getRequiredRegionCount());
         List<Mapper> mappersForNextVFpga = new ArrayList<>();
         for (int i = 0; i < bitstream.getRequiredRegionCount(); i++) {
@@ -280,7 +288,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
                     getSimulation().clockStr(),
                     getClass().getSimpleName(), segmentExecution.getSegment().getUniqueId(), vFpga.getId(),
                     vFpga.getManager().getFpga().getId(),
-                    format2DecimalPlaces(executionTime));
+                    (executionTime));
         } else {
             LOGGER.info("{}: {}: No accelerable segment processed in VFPGA {}. VFPGA successfully destroyed on FPGA " +
                             "{}. Creation time: {}", getSimulation().clockStr(), getClass().getSimpleName(),

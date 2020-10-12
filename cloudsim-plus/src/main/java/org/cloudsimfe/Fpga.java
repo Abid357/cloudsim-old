@@ -575,6 +575,17 @@ public class Fpga {
         }
 
         /**
+         * Sets the family of this FPGA.
+         *
+         * @param family {@link org.cloudsimfe.Fpga#family}
+         * @return this {@link org.cloudsimfe.Fpga.Builder} object
+         */
+        public Builder setFamily(String family) {
+            this.family = family;
+            return this;
+        }
+
+        /**
          * Sets the length of this FPGA chip.
          *
          * @param length {@link org.cloudsimfe.Fpga#length}

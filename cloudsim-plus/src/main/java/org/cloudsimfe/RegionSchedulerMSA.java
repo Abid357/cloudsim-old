@@ -52,7 +52,7 @@ public class RegionSchedulerMSA implements RegionScheduler {
     }
 
     @Override
-    public boolean scheduleRegions(int fpgaCount, int regionCount, Object tasks) {
+    public boolean schedule(int fpgaCount, int regionCount, Object tasks) {
         NUM_OF_FPGAS = fpgaCount;
         NUM_OF_REGIONS = regionCount;
 
@@ -61,7 +61,7 @@ public class RegionSchedulerMSA implements RegionScheduler {
 
         simulate();
 
-        manager.updateHypervisors(getCompletionTime(bestSolution), bestSolution);
+        manager.updateHypervisors(getCompletionTime(bestSolution), bestSolution, this.tasks);
 
         return false;
     }

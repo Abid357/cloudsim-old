@@ -13,9 +13,9 @@ public class PartitionPolicyGrid implements PartitionPolicy {
         int width = (int) (fpga.getWidth() / cols);
         int length = (int) (fpga.getLength() / rows);
         int partitions = rows * cols;
-        for (int x = 0; x < fpga.getWidth(); x += width)
-            for (int y = 0; y < fpga.getLength(); y += length) {
-                RectangleRegion region = new RectangleRegion.Builder(x, y, width, length, fpga)
+        for (int r = 0; r < rows; r++)
+            for (int c = 0; c < cols; c++) {
+                RectangleRegion region = new RectangleRegion.Builder(width * c, length * r, width - 1, length - 1, fpga)
                         .setLogicElements(fpga.getLogicElements() / partitions)
                         .setMemoryRegisters(fpga.getMemory() / partitions)
                         .setDspSlices(fpga.getDspSlices() / partitions)

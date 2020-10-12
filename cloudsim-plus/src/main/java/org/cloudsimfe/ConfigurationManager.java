@@ -88,7 +88,6 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
         int availableBlocks = getDynamicRegions().size() - occupiedBlocks;
         if (availableBlocks < bitstream.getRequiredRegionCount() && !shouldReplace)
             return null;
-
         for (int i = 0; i < bitstream.getRequiredRegionCount(); i++) {
             int index = getNextAvailableRegionIndex(shouldReplace);
             if (index == -1)
@@ -110,7 +109,7 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
     }
 
     public void deallocateRegionByIndex(int index) {
-        getDynamicRegions().get(index).setAvailable(true);
+        regions.get(index).setAvailable(true);
         int row = index / map.length;
         int col = index % map[0].length;
         map[row][col] = 0;

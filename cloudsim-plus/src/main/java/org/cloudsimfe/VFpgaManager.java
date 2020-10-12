@@ -7,9 +7,7 @@ import org.cloudbus.cloudsim.core.Simulation;
 import org.cloudbus.cloudsim.core.events.SimEvent;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class VFpgaManager extends CloudSimEntity implements Addressable, Clockable {
     private Fpga fpga;
@@ -18,6 +16,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
     private long[][] scheduledTiles; // row count indicates number of tiles, column count indicates block number (b)
     // by scheduling policy (j), vFpga ID (j+1) and execution time unit (j+2)
     private List<Mapper> mappers;
+    private Map<Integer, Integer> vFpgaToAcceleratorMaps;
     private List<Boolean> availableBlocks;
     private UnifiedManager manager;
 
@@ -26,6 +25,15 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
         createdVFpgas = new ArrayList<>();
         destroyedVFpgas = new ArrayList<>();
         mappers = new ArrayList<>();
+        vFpgaToAcceleratorMaps = new HashMap<>();
+    }
+
+    public void addVFpgaToAcceleratorMapping(int vFpgaId, int acceleratorId) {
+        vFpgaToAcceleratorMaps.put(vFpgaId, acceleratorId);
+    }
+
+    public int getVFpgaToAcceleratorMapping(int vFpgaId) {
+        return vFpgaToAcceleratorMaps.get(vFpgaId);
     }
 
     public void setUnifiedManager(UnifiedManager manager) {
@@ -48,12 +56,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
         }
     }
 
-    public void notify(Payload payload) {
-        VFpga vFpga = (VFpga) payload.getData().get(0);
-        send(this, vFpga.getConfigurationTime(), CloudSimTags.VFPGA_RECONFIGURATION_FINISH, payload);
-    }
-
-    public void createVFpga(List<Region> regions, double configurationTime, Payload payload){
+    public void createVFpga(List<Region> regions, double configurationTime, Payload payload) {
         Bitstream bitstream = (Bitstream) payload.getData().get(0);
         List<Mapper> vFpgaMappers = (List<Mapper>) payload.getData().get(1);
         int vFpgaId = (Integer) payload.getData().get(2);
@@ -75,14 +78,6 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
         ethernetPayload.addData(srcAddress);
 
         send(this, vFpga.getConfigurationTime(), CloudSimTags.VFPGA_RECONFIGURATION_FINISH, ethernetPayload);
-    }
-
-    public void registerVFpga(VFpga vFpga, List<Mapper> vFpgaMappers) {
-        for (Mapper mapper : vFpgaMappers)
-            availableBlocks.set(mapper.getBlockInHypervisor(), false);
-        mappers.addAll(vFpgaMappers);
-        createdVFpgas.add(vFpga);
-        vFpga.setCreatedAt(getSimulation().clock());
     }
 
     public List<Boolean> getAvailableBlockList() {
@@ -252,6 +247,9 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
         int row = 0;
         int listOffset = 0;
 
+        int availableBlockCount = (int) availableBlocks.stream().filter(block -> block.booleanValue()).count();
+        int requiredBlockCount = 0;
+
         // offset is to ignore the blocks corresponding to static regions
         while (fpga.getConfigurationManager().getRegions().get(listOffset).isStatic())
             listOffset++;
@@ -263,8 +261,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
                     if (scheduledTiles[row][col] == 0) {
                         configureVFpga = false;
                         continue;
-                    }
-                    else if (scheduledTiles[row][col] != nextVFpgaId) {
+                    } else if (scheduledTiles[row][col] != nextVFpgaId) {
                         nextVFpgaId = scheduledTiles[row][col];
                         for (VFpga vFpga : combinedList) {
                             if (vFpga.getId() == nextVFpgaId) {
@@ -272,10 +269,16 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
                                 break;
                             }
                         }
-                    }
-                    else
+                    } else
                         configureVFpga = false;
                 }
+
+                for (int r = 0; r < scheduledTiles.length; r++)
+                    for (int c = 0; c < scheduledTiles[0].length; c++)
+                        if (scheduledTiles[r][c] == nextVFpgaId)
+                            requiredBlockCount++;
+                if (requiredBlockCount > availableBlockCount)
+                    configureVFpga = false;
 
                 if (configureVFpga) {
                     List<Object> data = new ArrayList<>();
@@ -297,12 +300,12 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
 
     }
 
-    public void processReconfigurationFinish(SimEvent evt){
+    public void processReconfigurationFinish(SimEvent evt) {
         Payload payload = (Payload) evt.getData();
         fpga.getNetworkManager().sendDataToComponent(payload);
     }
 
-    public void processSegmentFinish(SimEvent evt){
+    public void processSegmentFinish(SimEvent evt) {
         VFpga vFpga = (VFpga) evt.getData();
         Payload payload = vFpga.getAdapter().readFromBuffer(Adapter.WRITE_BUFFER);
         if (payload == null)
@@ -317,7 +320,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
     public void processEvent(SimEvent evt) {
         if (evt.getTag() == CloudSimTags.VFPGA_RECONFIGURATION_FINISH) {
             processReconfigurationFinish(evt);
-        } else if (evt.getTag() == CloudSimTags.VFPGA_SEGMENT_PROCESSING_FINISH){
+        } else if (evt.getTag() == CloudSimTags.VFPGA_SEGMENT_PROCESSING_FINISH) {
             processSegmentFinish(evt);
         }
     }

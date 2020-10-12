@@ -32,8 +32,10 @@ import org.cloudbus.cloudsim.resources.PeSimple;
 import org.cloudbus.cloudsim.vms.Vm;
 import org.cloudbus.cloudsim.vms.VmSimple;
 import org.cloudsimfe.*;
+import org.cloudsimplus.builders.tables.CloudletsTableBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -44,8 +46,7 @@ import java.util.List;
  * to change the number of Hosts, VMs and Cloudlets to create
  * and the number of {@link Pe}s for Hosts, VMs and Cloudlets.</p>
  *
- * @author Manoel Campos da Silva Filho
- * @since CloudSim Plus 1.0
+ * @author Abid Farhan
  */
 public class FpgaExample {
     private static final int HOSTS = 1;
@@ -78,22 +79,121 @@ public class FpgaExample {
     private DhcpServer server;
     private NetlistStore store;
 
-    private FpgaExample() {
-        /*Enables just some level of log messages.
-          Make sure to import org.cloudsimplus.util.Log;*/
-        //Log.setLevel(ch.qos.logback.classic.Level.WARN);
+    private FpgaExample(int option) {
+        server = new DhcpServer();
+        store = new NetlistStore();
 
+        simulation = new CloudSim(0.001);
+
+        // CREATE HOST
+        double mipsHost = 3000; // converted from MHz to MIPS
+        long ram = 16000; // in MB equivalent of 16GB
+        long bandwidth = 10000; // in Mbps equivalent of 10GE Ethernet
+        long storage = 100000; // in MB equivalent of 100GB
+        int cores = 8;
+        List<Pe> peList = new ArrayList<>();
+
+        for (int i = 0; i < cores; i++)
+            peList.add(new PeSimple(mipsHost));
+        Host host = new HostSimple(ram, bandwidth, storage, peList);
+
+        // CREATE FPGA
+        PartitionPolicy partitionPolicy = new PartitionPolicyGrid();
+        partitionPolicy.setOption(2, PartitionPolicyGrid.OPTION_GRID_ROWS);
+        partitionPolicy.setOption(2, PartitionPolicyGrid.OPTION_GRID_COLS);
+
+        Fpga fpga = new Fpga.Builder(simulation, 1, server)
+                .setBrand("Xilinx")
+                .setFamily("Virtex-6")
+                .setModel("XC6VLX550T")
+                .setLogicElements(549888)
+                .setMemoryRegisters(22752)
+                .setBlockedRams(632)
+                .setDspSlices(864)
+                .setIoPins(1200)
+                .setTransceivers(40)
+                .setPhaseLockedLoops(18)
+                .setLength(43)
+                .setWidth(43)
+                .setClock(600)
+                .setPartitionPolicy(partitionPolicy)
+                .setStaticRegionCount(1)
+                .build();
+
+        // CREATE DATACENTER AND BROKER
+        datacenter0 = new DatacenterFE(simulation, Arrays.asList(host), Arrays.asList(fpga), server);
+        broker0 = new DatacenterBrokerFE(simulation, "BrokerFE");
+
+        // CREATE VM
+        double mipsVm = 3000;
+        Vm vm = new VmSimple(mipsVm, 2);
+        vm.setRam(4000).setBw(1000).setSize(10000);
+
+        // CREATE ACCELERATOR
+        Accelerator imageProcessor = new Accelerator(1, 400,
+                40, Accelerator.TYPE_IMAGE_PROCESSING);
+        imageProcessor.setBroker(broker0);
+
+        Netlist netlist = new Netlist(imageProcessor, 2, 1, 3);
+        store.addNetlist(netlist);
+
+        // CREATE CLOUDLET
+        AccelerableCloudlet image1 = new AccelerableCloudlet(52,
+                1);
+        image1.addSegment(4, 48, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet image2 = new AccelerableCloudlet(61, 1);
+        image2.addSegment(3, 58, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet image3 = new AccelerableCloudlet(66, 1);
+        image3.addSegment(3, 63, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet image4 = new AccelerableCloudlet(77, 1);
+        image4.addSegment(9, 68, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet image5 = new AccelerableCloudlet(105, 1);
+        image5.addSegment(7, 98, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet image6 = new AccelerableCloudlet(100, 1);
+        image6.addSegment(14, 86, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet image7 = new AccelerableCloudlet(105, 1);
+        image7.addSegment(18, 87, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet image8 = new AccelerableCloudlet(108, 1);
+        image8.addSegment(20, 88, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet image9 = new AccelerableCloudlet(135, 1);
+        image9.addSegment(21, 115, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet image10 = new AccelerableCloudlet(620, 1);
+        image10.addSegment(41, 579, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        List<AccelerableCloudlet> images = Arrays.asList(image1, image2, image3, image4, image5, image6, image7,
+                image8, image9, image10);
+        List<Accelerator> requestedAccelerators = createAcceleratorRequests(images);
+
+        // SETUP
+        broker0.submitVmList(Arrays.asList(vm));
+        broker0.submitCloudletList(images);
+        broker0.submitAcceleratorRequests(requestedAccelerators);
+        datacenter0.getUnifiedManager().setNetlistStore(store);
+        simulation.start();
+
+        fpga.getVFpgaManager().printScheduledTiles();
+    }
+
+    private FpgaExample() {
         server = new DhcpServer();
         store = new NetlistStore();
 
         simulation = new CloudSim();
         datacenter0 = createDatacenter();
 
-        //Creates a broker that is a software acting on behalf a cloud customer to manage his/her VMs and Cloudlets
         broker0 = new DatacenterBrokerFE(simulation, "BrokerFE");
 
         vmList = createVms();
-        acceleratorRequests = createAcceleratorRequests();
+//        acceleratorRequests = createAcceleratorRequests();
         cloudletList = createCloudlets();
         broker0.submitVmList(vmList);
         broker0.submitCloudletList(cloudletList);
@@ -102,17 +202,13 @@ public class FpgaExample {
 
         simulation.start();
 
-//        final List<Cloudlet> finishedCloudlets = broker0.getCloudletFinishedList();
-//        finishedCloudlets.removeIf(cloudlet -> cloudlet.getStatus().equals(Cloudlet.Status.INSTANTIATED));
-//        final List<AccelerableCloudlet> finishedAccelerableCloudlets = new ArrayList<>();
-//        for (Cloudlet cloudlet : finishedCloudlets)
-//            finishedAccelerableCloudlets.add((AccelerableCloudlet) cloudlet);
-//        new AccelerableCloudletsTableBuilder(finishedAccelerableCloudlets).build();
-//        new CloudletsTableBuilder(finishedCloudlets).build();
+        final List<Cloudlet> finishedCloudlets = broker0.getCloudletFinishedList();
+        new CloudletsTableBuilder(finishedCloudlets).build();
+        new SegmentsTableBuilder(finishedCloudlets).build();
     }
 
     public static void main(String[] args) {
-        new FpgaExample();
+        new FpgaExample(1);
     }
 
     public Fpga createAndPartitionFpga(int id) {
@@ -152,26 +248,38 @@ public class FpgaExample {
 
         final List<Fpga> fpgaList = new ArrayList<>();
         for (int i = 0; i < FPGAS; i++)
-        fpgaList.add(createAndPartitionFpga(i + 1));
+            fpgaList.add(createAndPartitionFpga(i + 1));
 
         //Uses a VmAllocationPolicySimple by default to allocate VMs
         return new DatacenterFE(simulation, hostList, fpgaList, server);
     }
 
-    public List<Accelerator> createAcceleratorRequests() {
-        List<Accelerator> accelerators = new ArrayList<>();
-
-        for (int i = 0; i < ACCELERATORS; i++) {
-            Accelerator accelerator = new Accelerator(Accelerator.CURRENT_ACCELERATOR_ID++, ACCELERATOR_CAPACITY_MFLOPS,
-                    ACCELERATOR_CONCURRENCY,
-                    Accelerator.TYPE_IMAGE_PROCESSING);
-            accelerator.setBroker(broker0);
-
-            Netlist netlist = new Netlist(accelerator, ACCELERATOR_REQUIRED_REGIONS, 3, 3);
-            store.addNetlist(netlist);
-
-            accelerators.add(accelerator);
+    public List<Accelerator> createAcceleratorRequests(List<AccelerableCloudlet> list) {
+        List<Accelerator> requestedAccelerators = new ArrayList<>();
+        for (AccelerableCloudlet cloudlet : list){
+            AccelerableSegment segment = cloudlet.getNextSegment();
+            while (segment != null){
+                int acceleratorId = store.hasAcceleratorType(segment.getType());
+                if (acceleratorId != -1)
+                    requestedAccelerators.add(store.getNetlist(acceleratorId).getAccelerator());
+                segment = cloudlet.getNextSegment();
+            }
         }
+        return requestedAccelerators;
+
+//        List<Accelerator> accelerators = new ArrayList<>();
+//
+//        for (int i = 0; i < ACCELERATORS; i++) {
+//            Accelerator accelerator = new Accelerator(Accelerator.CURRENT_ACCELERATOR_ID++, ACCELERATOR_CAPACITY_MFLOPS,
+//                    ACCELERATOR_CONCURRENCY,
+//                    Accelerator.TYPE_IMAGE_PROCESSING);
+//            accelerator.setBroker(broker0);
+//
+//            Netlist netlist = new Netlist(accelerator, ACCELERATOR_REQUIRED_REGIONS, 3, 3);
+//            store.addNetlist(netlist);
+//
+//            accelerators.add(accelerator);
+//        }
 
 //        Accelerator accelerator1 = new Accelerator(Accelerator.CURRENT_ACCELERATOR_ID++, mflops, concurrency,
 //                Accelerator.TYPE_ENCRYPTION);
@@ -179,7 +287,7 @@ public class FpgaExample {
 //        Bitstream bitstream1 = new Bitstream(new Adapter(), accelerator1, 2, 3);
 //        imageList.add(bitstream1);
 
-        return accelerators;
+//        return accelerators;
     }
 
     private Host createHost() {
