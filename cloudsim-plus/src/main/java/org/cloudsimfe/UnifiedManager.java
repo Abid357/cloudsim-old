@@ -1,5 +1,6 @@
 package org.cloudsimfe;
 
+import org.cloudbus.cloudsim.brokers.DatacenterBroker;
 import org.cloudbus.cloudsim.core.CloudSimEntity;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.Simulation;
@@ -16,6 +17,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
     private static final Logger LOGGER = LoggerFactory.getLogger(UnifiedManager.class.getSimpleName());
 
     private Datacenter datacenter;
+    private DatacenterBroker broker;
     private List<VFpgaManager> vFpgaManagers;
     private List<AccelerableSegment> waitingSegmentList;
     private List<AccelerableSegment> submittedSegmentList;
@@ -36,6 +38,10 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         segmentExecutionList = new ArrayList<>();
         scheduler = new RegionSchedulerMSA(this);
         format = new DecimalFormat("##########.00");
+    }
+
+    public void setBroker(DatacenterBroker broker) {
+        this.broker = broker;
     }
 
     public Datacenter getDatacenter() {
@@ -146,7 +152,8 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
                 netlist.getAccelerator().getOutputChannels());
 
         // bitstream generation
-        Bitstream bitstream = new Bitstream(adapter, netlist.getAccelerator(), netlist.getRequiredRegionCount());
+        Bitstream bitstream = new Bitstream(adapter, netlist.getAccelerator(), netlist.getRequiredRegionCount(),
+                netlist.getFileSize());
         List<Mapper> mappersForNextVFpga = new ArrayList<>();
         for (int i = 0; i < bitstream.getRequiredRegionCount(); i++) {
             mappersForNextVFpga.add(new Mapper(vFpgaId, row + i + 1));
@@ -289,6 +296,8 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
                     getClass().getSimpleName(), segmentExecution.getSegment().getUniqueId(), vFpga.getId(),
                     vFpga.getManager().getFpga().getId(),
                     (executionTime));
+
+            sendNow(broker, CloudSimTags.VFPGA_SEGMENT_FINISH, segment);
         } else {
             LOGGER.info("{}: {}: No accelerable segment processed in VFPGA {}. VFPGA successfully destroyed on FPGA " +
                             "{}. Creation time: {}", getSimulation().clockStr(), getClass().getSimpleName(),

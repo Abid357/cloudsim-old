@@ -126,6 +126,7 @@ public class SegmentExecution {
             this.arrivalTime = cloudlet.getSimulation().clock();
             this.finishedTime = Cloudlet.NOT_ASSIGNED;
             this.lastProcessingTime = Cloudlet.NOT_ASSIGNED;
+            segment.setExecution(this);
         }
         else{
             this.cloudlet = null;

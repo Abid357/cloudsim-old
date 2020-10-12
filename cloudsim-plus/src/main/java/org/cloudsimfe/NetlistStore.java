@@ -19,7 +19,8 @@ public class NetlistStore {
         return netlists.stream()
                 .filter(netlist -> netlist.getAccelerator().getAcceleratorId() == id)
                 .findFirst()
-                .get();
+                .get()
+                .copy();
     }
 
     public int hasAcceleratorType(int type){

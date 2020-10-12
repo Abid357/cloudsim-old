@@ -12,6 +12,15 @@ import java.util.Queue;
  */
 public class ConfigurationManager extends AddressableComponent implements Clockable{
 
+    public static final int BUS_WIDTH_4_BIT = 4;
+    public static final int BUS_WIDTH_8_BIT = 8;
+    public static final int BUS_WIDTH_16_BIT = 16;
+    public static final int BUS_WIDTH_32_BIT = 32;
+    public static final int BUS_WIDTH_64_BIT = 64;
+    public static final int BUS_WIDTH_128_BIT = 128;
+    public static final int BUS_WIDTH_256_BIT = 256;
+    public static final int BUS_WIDTH_512_BIT = 512;
+
     private Fpga fpga;
     private List<Region> regions;
     private List<Boolean> availabilityList;
@@ -20,12 +29,26 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
     private long[][] map;
     private Queue<Bitstream> volatileMemory;
     private Bitstream nonVolatileMemory;
+    private int busWidth;
+    private long clock;
 
     public ConfigurationManager(Rectangle fabric) {
         this.fabric = fabric;
         regions = new ArrayList<>();
         volatileMemory = new LinkedList<>();
         availabilityList = new ArrayList<>();
+    }
+
+    public int getBusWidth() {
+        return busWidth;
+    }
+
+    public void setBusWidth(int busWidth) {
+        this.busWidth = busWidth;
+    }
+
+    public void setClock(long clock) {
+        this.clock = clock;
     }
 
     public void setMap(long[][] map) {
@@ -50,8 +73,11 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
 
         fpga.getClockManager().acquireClockFor(bitstream.getAccelerator());
 
-        //TODO: find a more stable formula for calculating configuration time from literature
-        double configurationTime = configuredRegions.size() * 0.5;
+        // calculate configuration time based on bitstream file size, configuration clock and bus width
+        long bitstreamLength = bitstream.getFileSize() * 8 * 1000000; // megabytes to bits
+        double configurationTime =
+                (bitstreamLength / (double) busWidth) * (1.0 / clock);
+        configurationTime /= 1000; // seconds to milliseconds
 
         fpga.getVFpgaManager().createVFpga(configuredRegions, configurationTime, payload);
     }
@@ -215,7 +241,7 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
 
     @Override
     public long getClockValue() {
-        return fpga.getClock();
+        return clock;
     }
 
     @Override

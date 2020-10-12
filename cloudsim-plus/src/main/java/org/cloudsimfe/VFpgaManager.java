@@ -234,7 +234,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
                 deallocateBlocks(vFpga.getId());
                 fpga.getNetworkManager().unregisterRoute(vFpga.getIpAddress());
 
-                sendNow(this, CloudSimTags.VFPGA_SEGMENT_PROCESSING_FINISH, vFpga);
+                sendNow(this, CloudSimTags.VFPGA_SEGMENT_FINISH, vFpga);
             }
         }
         createdVFpgas.removeAll(listToRemove);
@@ -320,7 +320,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
     public void processEvent(SimEvent evt) {
         if (evt.getTag() == CloudSimTags.VFPGA_RECONFIGURATION_FINISH) {
             processReconfigurationFinish(evt);
-        } else if (evt.getTag() == CloudSimTags.VFPGA_SEGMENT_PROCESSING_FINISH) {
+        } else if (evt.getTag() == CloudSimTags.VFPGA_SEGMENT_FINISH) {
             processSegmentFinish(evt);
         }
     }

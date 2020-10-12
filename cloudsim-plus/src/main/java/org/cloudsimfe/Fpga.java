@@ -421,6 +421,8 @@ public class Fpga {
         private ClockManager clockManager;
         private PartitionPolicy partitionPolicy;
         private int staticRegionCount;
+        private int configurationBusWidth;
+        private long configurationClock;
 
         /**
          * Constructor of the Builder class.
@@ -449,6 +451,8 @@ public class Fpga {
             clockManager = new ClockManager(clock, pll);
             partitionPolicy = new PartitionPolicyGrid();
             staticRegionCount = 1;
+            configurationBusWidth = ConfigurationManager.BUS_WIDTH_64_BIT;
+            configurationClock = clock;
         }
 
         /**
@@ -460,7 +464,9 @@ public class Fpga {
             configurationManager.setFpga(fpga);
             configurationManager.setPartitionPolicy(partitionPolicy);
             configurationManager.doPartition();
-            configurationManager.setNonVolatileMemory(new Bitstream(null, null, staticRegionCount));
+            configurationManager.setNonVolatileMemory(new Bitstream(null, null, staticRegionCount, 10));
+            configurationManager.setClock(configurationClock);
+            configurationManager.setBusWidth(configurationBusWidth);
             networkManager.setFpga(fpga);
             networkManager.sendDataToComponent(new Payload(configurationManager));
             vFpgaManager.setFpga(fpga);
@@ -636,6 +642,16 @@ public class Fpga {
 
         public Builder setStaticRegionCount(int count) {
             this.staticRegionCount = count;
+            return this;
+        }
+
+        public Builder setConfigurationBusWidth(int configurationBusWidth) {
+            this.configurationBusWidth = configurationBusWidth;
+            return this;
+        }
+
+        public Builder setConfigurationClock(long configurationClock) {
+            this.configurationClock = configurationClock;
             return this;
         }
 

@@ -116,6 +116,8 @@ public class FpgaExample {
                 .setLength(43)
                 .setWidth(43)
                 .setClock(600)
+                .setConfigurationClock(250)
+                .setConfigurationBusWidth(ConfigurationManager.BUS_WIDTH_128_BIT)
                 .setPartitionPolicy(partitionPolicy)
                 .setStaticRegionCount(1)
                 .build();
@@ -134,7 +136,8 @@ public class FpgaExample {
                 40, Accelerator.TYPE_IMAGE_PROCESSING);
         imageProcessor.setBroker(broker0);
 
-        Netlist netlist = new Netlist(imageProcessor, 2, 1, 3);
+        Netlist netlist = new Netlist(imageProcessor, 2, 1, 3, 1);
+        System.out.println(netlist);
         store.addNetlist(netlist);
 
         // CREATE CLOUDLET
@@ -177,10 +180,12 @@ public class FpgaExample {
         broker0.submitVmList(Arrays.asList(vm));
         broker0.submitCloudletList(images);
         broker0.submitAcceleratorRequests(requestedAccelerators);
+        datacenter0.getUnifiedManager().setBroker(broker0);
         datacenter0.getUnifiedManager().setNetlistStore(store);
         simulation.start();
 
         fpga.getVFpgaManager().printScheduledTiles();
+        new SegmentsTableBuilder(broker0.getFinishedSegments()).build();
     }
 
     private FpgaExample() {
@@ -204,7 +209,7 @@ public class FpgaExample {
 
         final List<Cloudlet> finishedCloudlets = broker0.getCloudletFinishedList();
         new CloudletsTableBuilder(finishedCloudlets).build();
-        new SegmentsTableBuilder(finishedCloudlets).build();
+//        new SegmentsTableBuilder(finishedCloudlets).build();
     }
 
     public static void main(String[] args) {

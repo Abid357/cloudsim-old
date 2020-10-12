@@ -8,11 +8,13 @@ public class Bitstream {
     private Adapter adapter;
     private Accelerator accelerator;
     private int requiredRegionCount;
+    private int fileSize;
 
-    public Bitstream(Adapter adapter, Accelerator accelerator, int requiredRegionCount) {
+    public Bitstream(Adapter adapter, Accelerator accelerator, int requiredRegionCount, int fileSize) {
         this.adapter = adapter;
         this.accelerator = accelerator;
         this.requiredRegionCount = requiredRegionCount;
+        this.fileSize = fileSize;
     }
 
     public Adapter getAdapter() {
@@ -39,4 +41,11 @@ public class Bitstream {
         this.requiredRegionCount = requiredRegionCount;
     }
 
+    public int getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(int fileSize) {
+        this.fileSize = fileSize;
+    }
 }

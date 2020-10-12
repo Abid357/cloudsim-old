@@ -81,6 +81,13 @@ public class Accelerator extends CustomerEntityAbstract implements Clockable {
         this(id, mflops, concurrency, type, 50, 3, 3, 0);
     }
 
+    public Accelerator copy(){
+        Accelerator accelerator = new Accelerator(id, mflops, concurrency, type, clock, inputChannels, outputChannels,
+            submissionDelay);
+        accelerator.setBroker(getBroker());
+        return accelerator;
+    }
+
     /**
      * Submits the accelerable cloudlet segment that will be processed / accelerated by the accelerator provided the
      * accelerator status was initially IDLE. Then, it uses the SegmentExecution class which has some useful methods
@@ -93,7 +100,7 @@ public class Accelerator extends CustomerEntityAbstract implements Clockable {
         if (status == IDLE) {
             Payload payload = adapter.readFromBuffer(Adapter.READ_BUFFER);
             currentSegment = (AccelerableSegment) payload.getData().get(0);
-            currentSegment.registerArrivalInAccelerator();
+            currentSegment.setAccelerator(this);
             se = new SegmentExecution(currentSegment);
             vFpga.addSegmentExecution(se);
             se.setLastProcessingTime(getSimulation().clock());

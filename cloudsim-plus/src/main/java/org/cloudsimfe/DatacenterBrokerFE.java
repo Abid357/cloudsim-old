@@ -28,6 +28,8 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
 
     private final List<Accelerator> acceleratorRequests;
 
+    private final List<AccelerableSegment> finishedSegments;
+
     /**
      * Creates a DatacenterBroker giving a specific name.
      * Subclasses usually should provide this constructor and
@@ -39,6 +41,7 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
     public DatacenterBrokerFE(CloudSim simulation, String name) {
         super(simulation, name);
         this.acceleratorRequests = new ArrayList<>();
+        this.finishedSegments = new ArrayList<>();
     }
 
     @Override
@@ -64,7 +67,14 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
         super.processEvent(evt);
         if (evt.getTag() == CloudSimTags.DATACENTER_LIST_REQUEST) {
             requestAcceleratorCreation();
+        } else if (evt.getTag() == CloudSimTags.VFPGA_SEGMENT_FINISH) {
+            processSegmentFinish(evt);
         }
+    }
+
+    private void processSegmentFinish(SimEvent evt){
+        AccelerableSegment segment = (AccelerableSegment) evt.getData();
+        finishedSegments.add(segment);
     }
 
     private int requestAcceleratorCreation() {
@@ -80,5 +90,9 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
 
         acceleratorRequests.forEach(accelerator -> accelerator.setLastTriedDatacenter(datacenter));
         return acceleratorRequests.size();
+    }
+
+    public List<AccelerableSegment> getFinishedSegments(){
+        return this.finishedSegments;
     }
 }

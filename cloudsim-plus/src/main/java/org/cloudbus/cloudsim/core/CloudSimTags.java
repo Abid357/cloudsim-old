@@ -340,7 +340,7 @@ public final class CloudSimTags {
 
     public static final int VFPGA_SEGMENT_ACK = BASE + 69;
 
-    public static final int VFPGA_SEGMENT_PROCESSING_FINISH = BASE + 70;
+    public static final int VFPGA_SEGMENT_FINISH = BASE + 70;
 
     public static final int REGION_SCHEDULING_FAIL = BASE + 71;
 

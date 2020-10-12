@@ -22,7 +22,6 @@ package org.cloudsimfe;/*
  *     along with CloudSim Plus. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.Identifiable;
 import org.cloudsimplus.builders.tables.Table;
 import org.cloudsimplus.builders.tables.TableBuilderAbstract;
@@ -43,10 +42,9 @@ import java.util.List;
  * @author Manoel Campos da Silva Filho
  * @since CloudSim Plus 1.0
  */
-public class SegmentsTableBuilder extends TableBuilderAbstract<Cloudlet> {
-    private static final String TIME_FORMAT = "%.0f";
+public class SegmentsTableBuilder extends TableBuilderAbstract<AccelerableSegment> {
+    private static final String TIME_FORMAT = "%.5f";
     private static final String SECONDS = "Seconds";
-    private static final String CPU_CORES = "CPU cores";
 
     /**
      * Instantiates a builder to print the list of Cloudlets using the a
@@ -55,7 +53,7 @@ public class SegmentsTableBuilder extends TableBuilderAbstract<Cloudlet> {
      *
      * @param list the list of Cloudlets to print
      */
-    public SegmentsTableBuilder(final List<? extends Cloudlet> list) {
+    public SegmentsTableBuilder(final List<? extends AccelerableSegment> list) {
         super(list);
     }
 
@@ -66,54 +64,31 @@ public class SegmentsTableBuilder extends TableBuilderAbstract<Cloudlet> {
      * @param list the list of Cloudlets to print
      * @param table the {@link Table} used to build the table with the Cloudlets data
      */
-    public SegmentsTableBuilder(final List<? extends Cloudlet> list, final Table table) {
+    public SegmentsTableBuilder(final List<? extends AccelerableSegment> list, final Table table) {
         super(list, table);
     }
 
     @Override
     protected void createTableColumns() {
         final String ID = "ID";
-        addColumnDataFunction(getTable().addColumn("Cloudlet", ID), Identifiable::getId);
-        addColumnDataFunction(getTable().addColumn("Status "), cloudlet -> cloudlet.getStatus().name());
-        addColumnDataFunction(getTable().addColumn("DC", ID), cloudlet -> cloudlet.getVm().getHost().getDatacenter().getId());
-        addColumnDataFunction(getTable().addColumn("Host", ID), cloudlet -> cloudlet.getVm().getHost().getId());
-        addColumnDataFunction(getTable().addColumn("Host PEs ", CPU_CORES), cloudlet -> cloudlet.getVm().getHost().getWorkingPesNumber());
-        addColumnDataFunction(getTable().addColumn("VM", ID), cloudlet -> cloudlet.getVm().getId());
-        addColumnDataFunction(getTable().addColumn("VM PEs   ", CPU_CORES), cloudlet -> cloudlet.getVm().getNumberOfPes());
-        addColumnDataFunction(getTable().addColumn("CloudletLen", "MI"), Cloudlet::getLength);
-        addColumnDataFunction(getTable().addColumn("CloudletPEs", CPU_CORES), Cloudlet::getNumberOfPes);
+        addColumnDataFunction(getTable().addColumn("Segment", ID), segment -> segment.getId());
+        addColumnDataFunction(getTable().addColumn("Cloudlet", ID), segment -> segment.getCloudlet().getId());
+        addColumnDataFunction(getTable().addColumn("SegmentType"),
+                segment -> segment.getType() == Accelerator.TYPE_IMAGE_PROCESSING ? "Image" :
+                        segment.getType() == Accelerator.TYPE_ENCRYPTION ? "Encryption" :
+                                segment.getType() == Accelerator.TYPE_FAST_FOURIER_TRANSFORM ? "FFT" : null);
+        addColumnDataFunction(getTable().addColumn("vFPGA", ID), segment -> segment.getAccelerator().getVFpga().getId());
 
-        TableColumn col = getTable().addColumn("StartTime", SECONDS).setFormat(TIME_FORMAT);
-        addColumnDataFunction(col, Cloudlet::getExecStartTime);
+        TableColumn col = getTable().addColumn("StartTime ", SECONDS).setFormat(TIME_FORMAT);
+        addColumnDataFunction(col, segment-> segment.getExecution().getSegmentArrivalTime());
 
         col = getTable().addColumn("FinishTime", SECONDS).setFormat(TIME_FORMAT);
-        addColumnDataFunction(col, cl -> roundTime(cl, cl.getFinishTime()));
+        addColumnDataFunction(col, segment -> segment.getExecution().getFinishTime());
 
-        col = getTable().addColumn("ExecTime", SECONDS).setFormat(TIME_FORMAT);
-        addColumnDataFunction(col, cl -> roundTime(cl, cl.getActualCpuTime()));
-    }
+        col = getTable().addColumn("ExecTime  ", SECONDS).setFormat(TIME_FORMAT);
+        addColumnDataFunction(col, segment -> segment.getExecution().getFinishTime() - segment.getExecution().getSegmentArrivalTime());
 
-    /**
-     * Rounds a given time so that decimal places are ignored.
-     * Sometimes a Cloudlet start at time 0.1 and finish at time 10.1.
-     * Previously, in such a situation, the finish time was rounded to 11 (Math.ceil),
-     * giving the wrong idea that the Cloudlet took 11 seconds to finish.
-     * This method makes some little adjustments to avoid such a precision issue.
-     *
-     * @param cloudlet the Cloudlet being printed
-     * @param time the time to round
-     * @return
-     */
-    private double roundTime(final Cloudlet cloudlet, final double time) {
-
-        /*If the given time minus the start time is less than 1,
-         * it means the execution time was less than 1 second.
-         * This way, it can't be round.*/
-        if(time - cloudlet.getExecStartTime() < 1){
-            return time;
-        }
-
-        final double startFraction = cloudlet.getExecStartTime() - (int) cloudlet.getExecStartTime();
-        return Math.round(time - startFraction);
+        col = getTable().addColumn("ConfigTime", SECONDS).setFormat(TIME_FORMAT);
+        addColumnDataFunction(col, segment -> segment.getAccelerator().getVFpga().getConfigurationTime());
     }
 }

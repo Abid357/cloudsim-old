@@ -11,6 +11,7 @@ public class AccelerableSegment {
     private long finishedLengthSoFar;
     private AccelerableCloudlet cloudlet;
     private Accelerator accelerator;
+    private SegmentExecution execution;
     private int type;
     private boolean backwardDependency;
     private boolean forwardDependency;
@@ -91,19 +92,28 @@ public class AccelerableSegment {
         this.cloudlet = cloudlet;
     }
 
-    public boolean isAssignedToAccelerator() {
-        return accelerator != null;
-    }
-
-    public double registerArrivalInAccelerator() {
-        if (!isAssignedToAccelerator()) {
-            return Cloudlet.NOT_ASSIGNED;
-        }
-
+    private double registerArrivalInAccelerator() {
         double time = cloudlet.getSimulation().clock();
         accelerator.setArrivalTime(time);
 
         return time;
+    }
+
+    public void setAccelerator(Accelerator accelerator) {
+        this.accelerator = accelerator;
+        registerArrivalInAccelerator();
+    }
+
+    public Accelerator getAccelerator(){
+        return this.accelerator;
+    }
+
+    public SegmentExecution getExecution() {
+        return execution;
+    }
+
+    public void setExecution(SegmentExecution execution) {
+        this.execution = execution;
     }
 
     public boolean isFinished() {
