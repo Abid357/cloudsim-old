@@ -303,8 +303,9 @@ public class SegmentExecution {
 
         this.instructionsFinishedSoFar += partialFinishedInstructions;
         final double partialFinishedMI = partialFinishedInstructions / Conversion.MILLION;
-        cloudlet.addFinishedLengthSoFar((long) partialFinishedMI);
-        segment.addFinishedLengthSoFar((long) partialFinishedMI);
+        final long finishedSoFar = Math.round(partialFinishedMI);
+        cloudlet.addFinishedLengthSoFar(finishedSoFar);
+        segment.addFinishedLengthSoFar(finishedSoFar);
 
         /* If a simulation termination time was defined and the length of the Cloudlet is negative
          * (to indicate that they must not finish before the termination time),

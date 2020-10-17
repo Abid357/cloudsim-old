@@ -540,10 +540,8 @@ public abstract class CloudletSchedulerAbstract implements CloudletScheduler {
         for (int i = 0; i < cloudletExecList.size(); i++) {
             final CloudletExecution cle = cloudletExecList.get(i);
             updateCloudletProcessingAndPacketsDispatch(cle, currentTime);
-            double temp = cloudletEstimatedFinishTime(cle, currentTime);
-            System.out.println(3 + "\tnextCloudletFinishTime=" + nextCloudletFinishTime + " " +
-                    "cloudletEstimatedFinishTime="+ temp + " size=" + cloudletExecList.size());
-            nextCloudletFinishTime = Math.min(nextCloudletFinishTime, temp);
+            nextCloudletFinishTime =
+                    Math.min(nextCloudletFinishTime, cloudletEstimatedFinishTime(cle, currentTime));
             usedPes += cle.getCloudlet().getNumberOfPes();
         }
 
@@ -563,9 +561,7 @@ public abstract class CloudletSchedulerAbstract implements CloudletScheduler {
         long partialFinishedMI = 0;
         if (taskScheduler.isTimeToUpdateCloudletProcessing(cle.getCloudlet())) {
             partialFinishedMI = updateCloudletProcessing(cle, currentTime);
-            System.out.println(1 + "\t" + partialFinishedMI + "MI" + " currentTime=" + currentTime);
         }
-
 
         taskScheduler.processCloudletTasks(cle.getCloudlet(), partialFinishedMI);
     }
@@ -796,8 +792,6 @@ public abstract class CloudletSchedulerAbstract implements CloudletScheduler {
          * That value will be the current allocated MIPS if some MIPS were
          * actually allocated or the previous allocated MIPS otherwise.*/
         final double estimatedFinishTime = cle.getRemainingCloudletLength() / cle.getLastAllocatedMips();
-        System.out.println("2\t" + "id=" + cle.getCloudlet().getId() + " currentTime=" + currentTime + " remains=" + cle.getRemainingCloudletLength() + " mips=" + cle.getLastAllocatedMips()
-                + " estimated=" + estimatedFinishTime);
         return Math.max(estimatedFinishTime, vm.getSimulation().getMinTimeBetweenEvents());
     }
 

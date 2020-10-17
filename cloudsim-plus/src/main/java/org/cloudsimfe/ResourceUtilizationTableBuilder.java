@@ -42,7 +42,7 @@ import java.util.List;
  * @author Manoel Campos da Silva Filho
  * @since CloudSim Plus 1.0
  */
-public class SegmentsTableBuilder extends TableBuilderAbstract<AccelerableSegment> {
+public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<AccelerableSegment> {
     private static final String TIME_FORMAT = "%.5f";
     private static final String SECONDS = "Seconds";
 
@@ -53,7 +53,7 @@ public class SegmentsTableBuilder extends TableBuilderAbstract<AccelerableSegmen
      *
      * @param list the list of Cloudlets to print
      */
-    public SegmentsTableBuilder(final List<? extends AccelerableSegment> list) {
+    public ResourceUtilizationTableBuilder(final List<? extends AccelerableSegment> list) {
         super(list);
     }
 
@@ -64,7 +64,7 @@ public class SegmentsTableBuilder extends TableBuilderAbstract<AccelerableSegmen
      * @param list the list of Cloudlets to print
      * @param table the {@link Table} used to build the table with the Cloudlets data
      */
-    public SegmentsTableBuilder(final List<? extends AccelerableSegment> list, final Table table) {
+    public ResourceUtilizationTableBuilder(final List<? extends AccelerableSegment> list, final Table table) {
         super(list, table);
     }
 
@@ -77,19 +77,7 @@ public class SegmentsTableBuilder extends TableBuilderAbstract<AccelerableSegmen
                 segment -> segment.getType() == Accelerator.TYPE_IMAGE_PROCESSING ? "Image" :
                         segment.getType() == Accelerator.TYPE_ENCRYPTION ? "Encryption" :
                                 segment.getType() == Accelerator.TYPE_FAST_FOURIER_TRANSFORM ? "FFT" : "N/A");
-        addColumnDataFunction(getTable().addColumn("vFPGA", ID),
-                segment -> segment.getAccelerator() == null ? "-" : segment.getAccelerator().getVFpga().getId());
-
-        TableColumn col = getTable().addColumn("StartTime ", SECONDS).setFormat(TIME_FORMAT);
-        addColumnDataFunction(col, segment-> segment.getExecution().getSegmentArrivalTime());
-
-        col = getTable().addColumn("FinishTime", SECONDS).setFormat(TIME_FORMAT);
-        addColumnDataFunction(col, segment -> segment.getExecution().getFinishTime());
-
-        col = getTable().addColumn("ExecTime  ", SECONDS).setFormat(TIME_FORMAT);
-        addColumnDataFunction(col, segment -> segment.getExecution().getFinishTime() - segment.getExecution().getSegmentArrivalTime());
-
-        col = getTable().addColumn("ConfigTime", SECONDS).setFormat(TIME_FORMAT);
-        addColumnDataFunction(col, segment -> segment.getAccelerator().getVFpga().getConfigurationTime());
+        addColumnDataFunction(getTable().addColumn("Accelerated?", "Yes/No"),
+                segment -> segment.getExecution() == null ? "No" : "Yes");
     }
 }

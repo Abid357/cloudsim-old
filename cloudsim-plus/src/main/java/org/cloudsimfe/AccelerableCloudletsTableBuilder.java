@@ -78,7 +78,12 @@ public class AccelerableCloudletsTableBuilder extends TableBuilderAbstract<Accel
         addColumnDataFunction(getTable().addColumn("Acc.Length", "MI"),
                 cloudlet -> cloudlet.getSegments().stream().mapToLong(AccelerableSegment::getLength).sum());
         addColumnDataFunction(getTable().addColumn("NAcc.Length", "MI"),
-                cloudlet -> cloudlet.getNonAccelerableSegments().getLength());
+                cloudlet -> cloudlet.getLength() - cloudlet.getSegments().stream().mapToLong(AccelerableSegment::getLength).sum());
+
+        addColumnDataFunction(getTable().addColumn("Accelerated?", "Yes/No"),
+                cloudlet -> cloudlet.getSegments().stream().allMatch(segment -> segment.getExecution() == null) ?
+                        "No" :
+                        "Yes");
 
         Comparator<AccelerableSegment> startTimeComparator =
                 Comparator.comparingDouble(s -> s.getExecution().getSegmentArrivalTime());
@@ -87,12 +92,21 @@ public class AccelerableCloudletsTableBuilder extends TableBuilderAbstract<Accel
 
         TableColumn col = getTable().addColumn("Acc.ExecTime", SECONDS).setFormat(TIME_FORMAT);
         addColumnDataFunction(col,
-                cloudlet -> cloudlet.getSegments().stream().max(finishTimeComparator).get().getExecution().getFinishTime() -
-                        cloudlet.getSegments().stream().min(startTimeComparator).get().getExecution().getSegmentArrivalTime());
+                cloudlet -> cloudlet.getSegments().stream().anyMatch(segment -> segment.getExecution() == null) ? 0 :
+                        cloudlet.getSegments().stream().max(finishTimeComparator).get().getExecution().getFinishTime() -
+                                cloudlet.getSegments().stream().min(startTimeComparator).get().getExecution().getSegmentArrivalTime());
 
         col = getTable().addColumn("NAcc.ExecTime", SECONDS).setFormat(TIME_FORMAT);
         addColumnDataFunction(col,
-                cloudlet -> cloudlet.getNonAccelerableSegments().getActualCpuTime());
+                cloudlet -> cloudlet.getSegments().stream().anyMatch(segment -> segment.getExecution() == null) ? 0 :
+                        cloudlet.getNonAccelerableSegments().getActualCpuTime());
+
+        col = getTable().addColumn("TotalExecTime", SECONDS).setFormat(TIME_FORMAT);
+        addColumnDataFunction(col,
+                cloudlet -> cloudlet.getSegments().stream().anyMatch(segment -> segment.getExecution() == null) ?
+                        cloudlet.getActualCpuTime() :
+                        cloudlet.getSegments().stream().max(finishTimeComparator).get().getExecution().getFinishTime() -
+                        cloudlet.getSegments().stream().min(startTimeComparator).get().getExecution().getSegmentArrivalTime() + cloudlet.getNonAccelerableSegments().getActualCpuTime());
     }
 
     /**

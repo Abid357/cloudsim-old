@@ -115,7 +115,6 @@ public class AlAghbariExample {
         imageProcessor.setBroker(broker0);
 
         Netlist netlist = new Netlist(imageProcessor, 2, 1, 3, 1);
-        System.out.println(netlist);
         store.addNetlist(netlist);
 
         // CREATE CLOUDLET
@@ -164,7 +163,6 @@ public class AlAghbariExample {
 
 //        fpga.getVFpgaManager().printScheduledTiles();
 //        new SegmentsTableBuilder(broker0.getFinishedSegments()).setTitle("Acceleration Results").build();
-
         new AccelerableCloudletsTableBuilder(broker0.getCloudletFinishedList()).setTitle("Cloudlet Execution Results").build();
     }
 

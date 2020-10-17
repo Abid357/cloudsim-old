@@ -25,6 +25,7 @@ public class AccelerableCloudlet extends CloudletSimple {
         segments = new ArrayList<>();
         this.length = length;
         setId(CURRENT_ACCELERABLE_CLOUDLET_ID++);
+        nonAccelerableSegments = this;
     }
 
     public AccelerableCloudlet(long length, int pesNumber) {
@@ -32,6 +33,7 @@ public class AccelerableCloudlet extends CloudletSimple {
         segments = new ArrayList<>();
         this.length = length;
         setId(CURRENT_ACCELERABLE_CLOUDLET_ID++);
+        nonAccelerableSegments = this;
     }
 
     public AccelerableCloudlet(long length, long pesNumber) {
@@ -39,6 +41,7 @@ public class AccelerableCloudlet extends CloudletSimple {
         segments = new ArrayList<>();
         this.length = length;
         setId(CURRENT_ACCELERABLE_CLOUDLET_ID++);
+        nonAccelerableSegments = this;
     }
 
     public AccelerableCloudlet(long id, long length, long pesNumber) {
@@ -46,6 +49,7 @@ public class AccelerableCloudlet extends CloudletSimple {
         segments = new ArrayList<>();
         this.length = length;
         setId(CURRENT_ACCELERABLE_CLOUDLET_ID++);
+        nonAccelerableSegments = this;
     }
 
     public void resetIterator() {
