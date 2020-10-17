@@ -331,6 +331,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
                 vFpga.getManager().getFpga().getId(),
                 format2DecimalPlaces(vFpga.getConfigurationTime()), vFpga.getIpAddress());
         sendNow(this, CloudSimTags.VFPGA_SEGMENT_SUBMIT, vFpga);
+        sendNow(broker, CloudSimTags.VFPGA_RECONFIGURATION_FINISH, vFpga);
     }
 
     public void processVFpgaOutput(Payload payload) {

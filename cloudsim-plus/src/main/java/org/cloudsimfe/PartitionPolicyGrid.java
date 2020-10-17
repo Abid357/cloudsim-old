@@ -18,6 +18,8 @@ public class PartitionPolicyGrid implements PartitionPolicy {
                 RectangleRegion region = new RectangleRegion.Builder(width * c, length * r, width - 1, length - 1, fpga)
                         .setLogicElements(fpga.getLogicElements() / partitions)
                         .setMemoryRegisters(fpga.getMemory() / partitions)
+                        .setBlockedRams(fpga.getBlockedRams() / partitions)
+                        .setTransceivers(fpga.getTransceivers() / partitions)
                         .setDspSlices(fpga.getDspSlices() / partitions)
                         .setIoPins(fpga.getIo() / partitions)
                         .build();

@@ -23,7 +23,6 @@
  */
 package org.cloudsimfe.examples;
 
-import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.hosts.HostSimple;
@@ -33,7 +32,6 @@ import org.cloudbus.cloudsim.schedulers.cloudlet.CloudletSchedulerSpaceShared;
 import org.cloudbus.cloudsim.vms.Vm;
 import org.cloudbus.cloudsim.vms.VmSimple;
 import org.cloudsimfe.*;
-import org.cloudsimplus.builders.tables.CloudletsTableBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -164,6 +162,10 @@ public class AlAghbariExample {
 //        fpga.getVFpgaManager().printScheduledTiles();
 //        new SegmentsTableBuilder(broker0.getFinishedSegments()).setTitle("Acceleration Results").build();
         new AccelerableCloudletsTableBuilder(broker0.getCloudletFinishedList()).setTitle("Cloudlet Execution Results").build();
+        if (!datacenter0.getFpgaList().isEmpty()) {
+            new VFpgaTableBuilder(broker0.getVirtualFpgas()).setTitle("Virtual FPGAs").build();
+            new ResourceUtilizationTableBuilder(broker0.getFinishedSegments()).setTitle("Resource Utilization").build();
+        }
     }
 
     public static void main(String[] args) {

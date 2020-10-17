@@ -8,14 +8,14 @@ package org.cloudsimfe;/*
 
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple;
-import org.cloudbus.cloudsim.cloudlets.Cloudlet;
-import org.cloudbus.cloudsim.core.*;
+import org.cloudbus.cloudsim.core.CloudSim;
+import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.events.SimEvent;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.util.Comparator.comparing;
-import static java.util.Objects.requireNonNull;
 
 /**
  * An abstract class to be used as base for implementing a {@link DatacenterBroker}.
@@ -32,6 +32,8 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
 
     private final List<AccelerableCloudlet> finishedCloudlets;
 
+    private final List<VFpga> virtualFpgas;
+
     /**
      * Creates a DatacenterBroker giving a specific name.
      * Subclasses usually should provide this constructor and
@@ -45,6 +47,7 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
         this.acceleratorRequests = new ArrayList<>();
         this.finishedSegments = new ArrayList<>();
         this.finishedCloudlets = new ArrayList<>();
+        this.virtualFpgas = new ArrayList<>();
     }
 
     @Override
@@ -65,7 +68,7 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
         return this;
     }
 
-    public List<AccelerableCloudlet> getCloudletFinishedList(){
+    public List<AccelerableCloudlet> getCloudletFinishedList() {
         return finishedCloudlets;
     }
 
@@ -76,19 +79,30 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
             requestAcceleratorCreation();
         } else if (evt.getTag() == CloudSimTags.VFPGA_SEGMENT_FINISH) {
             processSegmentFinish(evt);
-        }  else if (evt.getTag() == CloudSimTags.CLOUDLET_RETURN) {
+        } else if (evt.getTag() == CloudSimTags.CLOUDLET_RETURN) {
             getDatacenterList().get(0).processEvent(evt);
-        } else if (evt.getTag() == CloudSimTags.ALL_SEGMENTS_MERGED_RETURN){
+        } else if (evt.getTag() == CloudSimTags.ALL_SEGMENTS_MERGED_RETURN) {
             processSegmentsMergedReturn(evt);
+        } else if (evt.getTag() == CloudSimTags.VFPGA_RECONFIGURATION_FINISH) {
+            processVFpgaReconfiguration(evt);
         }
     }
 
-    private void processSegmentsMergedReturn(SimEvent evt){
+    public List<VFpga> getVirtualFpgas() {
+        return virtualFpgas;
+    }
+
+    private void processVFpgaReconfiguration(SimEvent evt) {
+        VFpga vFpga = (VFpga) evt.getData();
+        virtualFpgas.add(vFpga);
+    }
+
+    private void processSegmentsMergedReturn(SimEvent evt) {
         AccelerableCloudlet cloudlet = (AccelerableCloudlet) evt.getData();
         finishedCloudlets.add(cloudlet);
     }
 
-    private void processSegmentFinish(SimEvent evt){
+    private void processSegmentFinish(SimEvent evt) {
         AccelerableSegment segment = (AccelerableSegment) evt.getData();
         finishedSegments.add(segment);
     }
@@ -108,7 +122,7 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
         return acceleratorRequests.size();
     }
 
-    public List<AccelerableSegment> getFinishedSegments(){
+    public List<AccelerableSegment> getFinishedSegments() {
         return this.finishedSegments;
     }
 }

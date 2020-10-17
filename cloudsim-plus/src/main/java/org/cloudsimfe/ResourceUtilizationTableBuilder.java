@@ -22,10 +22,8 @@ package org.cloudsimfe;/*
  *     along with CloudSim Plus. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.cloudbus.cloudsim.core.Identifiable;
 import org.cloudsimplus.builders.tables.Table;
 import org.cloudsimplus.builders.tables.TableBuilderAbstract;
-import org.cloudsimplus.builders.tables.TableColumn;
 import org.cloudsimplus.builders.tables.TextTable;
 
 import java.util.List;
@@ -61,7 +59,7 @@ public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<Accele
      * Instantiates a builder to print the list of Cloudlets using the a
      * given {@link Table}.
      *
-     * @param list the list of Cloudlets to print
+     * @param list  the list of Cloudlets to print
      * @param table the {@link Table} used to build the table with the Cloudlets data
      */
     public ResourceUtilizationTableBuilder(final List<? extends AccelerableSegment> list, final Table table) {
@@ -71,13 +69,45 @@ public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<Accele
     @Override
     protected void createTableColumns() {
         final String ID = "ID";
-        addColumnDataFunction(getTable().addColumn("Segment", ID), segment -> segment.getId());
-        addColumnDataFunction(getTable().addColumn("Cloudlet", ID), segment -> segment.getCloudlet().getId());
+        addColumnDataFunction(getTable().addColumn(" Segment", "UID"), segment -> segment.getUniqueId());
         addColumnDataFunction(getTable().addColumn("SegmentType"),
                 segment -> segment.getType() == Accelerator.TYPE_IMAGE_PROCESSING ? "Image" :
                         segment.getType() == Accelerator.TYPE_ENCRYPTION ? "Encryption" :
                                 segment.getType() == Accelerator.TYPE_FAST_FOURIER_TRANSFORM ? "FFT" : "N/A");
-        addColumnDataFunction(getTable().addColumn("Accelerated?", "Yes/No"),
-                segment -> segment.getExecution() == null ? "No" : "Yes");
+
+        addColumnDataFunction(getTable().addColumn("Accelerator", ID),
+                segment -> segment.getAccelerator().getAcceleratorId());
+
+        addColumnDataFunction(getTable().addColumn("Regions", "Count"),
+                segment -> segment.getAccelerator().getVFpga().getRegions().size());
+
+        addColumnDataFunction(getTable().addColumn("FPGA", ID),
+                segment -> segment.getAccelerator().getVFpga().getManager().getFpga().getId());
+
+        addColumnDataFunction(getTable().addColumn(" LogicElements"),
+                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedLogicElements).sum() + "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedLogicElements).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getLogicElements() + "%)");
+
+        addColumnDataFunction(getTable().addColumn("MemoryRegisters"),
+                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedMemoryRegisters).sum() +
+                        "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedMemoryRegisters).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getMemory() + "%)");
+
+        addColumnDataFunction(getTable().addColumn("   DSPs   "),
+                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedDspSlices).sum() +
+                        "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedDspSlices).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getDspSlices() + "%)");
+
+        addColumnDataFunction(getTable().addColumn("BlockedRAMs"),
+                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedBlockedRams).sum() +
+                        "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedBlockedRams).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getBlockedRams() + "%)");
+
+        addColumnDataFunction(getTable().addColumn("  I/OPins  "),
+                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedIoPins).sum() +
+                        "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedIoPins).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getIo() + "%)");
+
+        addColumnDataFunction(getTable().addColumn("Transceivers"),
+                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedTransceivers).sum() +
+                        "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedTransceivers).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getTransceivers() + "%)");
+
+        addColumnDataFunction(getTable().addColumn(" PLL? ", "Yes/No"),
+                segment -> segment.getAccelerator().getVFpga().getManager().getFpga().getClock() == segment.getAccelerator().getClockValue() ? "Yes" : "No");
     }
 }
