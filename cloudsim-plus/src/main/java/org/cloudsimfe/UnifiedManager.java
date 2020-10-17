@@ -1,6 +1,7 @@
 package org.cloudsimfe;
 
 import org.cloudbus.cloudsim.brokers.DatacenterBroker;
+import org.cloudbus.cloudsim.cloudlets.Cloudlet;
 import org.cloudbus.cloudsim.core.CloudSimEntity;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.Simulation;
@@ -23,6 +24,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
     private List<AccelerableSegment> submittedSegmentList;
     private List<AccelerableSegment> finishedSegmentList;
     private List<SegmentExecution> segmentExecutionList;
+    private List<AccelerableCloudlet> trackedCloudletList;
     private List<Accelerator> accelerators;
     private String ipAddress;
     private RegionScheduler scheduler;
@@ -36,6 +38,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         submittedSegmentList = new ArrayList<>();
         finishedSegmentList = new ArrayList<>();
         segmentExecutionList = new ArrayList<>();
+        trackedCloudletList = new ArrayList<>();
         scheduler = new RegionSchedulerMSA(this);
         format = new DecimalFormat("##########.00");
     }
@@ -169,7 +172,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         vFpgaManager.getFpga().getNetworkManager().sendDataToComponent(new Payload(packet));
     }
 
-    public void processSegmentSubmit(SimEvent evt) {
+    private void processSegmentSubmit(SimEvent evt) {
         VFpga vFpga = (VFpga) evt.getData();
 
         AccelerableSegment segmentToSubmit = null;
@@ -198,7 +201,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         submittedSegmentList.add(segmentToSubmit);
     }
 
-    public void processSegmentAck(SimEvent evt) {
+    private void processSegmentAck(SimEvent evt) {
         Payload payload = (Payload) evt.getData();
         AccelerableSegment segment = (AccelerableSegment) payload.getData().get(0);
         VFpga vFpga = (VFpga) payload.getData().get(1);
@@ -209,6 +212,17 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
                 getSimulation().clockStr(),
                 getClass().getSimpleName(), segment.getUniqueId(), vFpga.getId(), vFpga.getManager().getFpga().getId());
         sendNow(this, CloudSimTags.VFPGA_UPDATE_SEGMENT_PROCESSING);
+    }
+
+    private void processNonAccelerableSegmentsFinish(SimEvent evt){
+        Cloudlet finishedCloudlet = (Cloudlet) evt.getData();
+        AccelerableCloudlet accelerableCloudlet = null;
+        for (int i = 0; i < broker.getCloudletSubmittedList().size(); i++){
+            accelerableCloudlet = (AccelerableCloudlet) broker.getCloudletSubmittedList().get(i);
+            if (accelerableCloudlet.getNonAccelerableSegments().equals(finishedCloudlet))
+                break;
+        }
+        trackCloudlet(accelerableCloudlet);
     }
 
     public String format2DecimalPlaces(double value) {
@@ -238,6 +252,8 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
             processSegmentSubmit(evt);
         } else if (evt.getTag() == CloudSimTags.VFPGA_SEGMENT_ACK) {
             processSegmentAck(evt);
+        } else if (evt.getTag() == CloudSimTags.CLOUDLET_RETURN){
+            processNonAccelerableSegmentsFinish(evt);
         }
     }
 
@@ -267,6 +283,41 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         return ipAddress;
     }
 
+    public void trackCloudlet(AccelerableCloudlet cloudlet){
+        Cloudlet nonAccelerableSegments = cloudlet.getNonAccelerableSegments();
+        List<AccelerableSegment> accelerableSegments = cloudlet.getSegments();
+
+        boolean notifyBroker = true;
+        if (nonAccelerableSegments != null){
+            notifyBroker = nonAccelerableSegments.isFinished();
+        }
+
+        if (notifyBroker){
+            for (AccelerableSegment segment : accelerableSegments)
+                if (!segment.isFinished()){
+                    notifyBroker = false;
+                    break;
+                }
+        }
+
+        if (notifyBroker) {
+            double minStartTime = Double.MAX_VALUE;
+            double maxFinishTime = Double.MIN_VALUE;
+
+            minStartTime = Math.min(minStartTime, nonAccelerableSegments.getExecStartTime());
+            maxFinishTime = Math.max(maxFinishTime, nonAccelerableSegments.getFinishTime());
+
+            for (AccelerableSegment segment : accelerableSegments){
+                minStartTime = Math.min(minStartTime, segment.getExecution().getSegmentArrivalTime());
+                maxFinishTime = Math.max(maxFinishTime, segment.getExecution().getFinishTime());
+            }
+
+            cloudlet.setExecStartTime(minStartTime);
+            cloudlet.setOverallFinishTime(maxFinishTime);
+            sendNow(broker, CloudSimTags.ALL_SEGMENTS_MERGED_RETURN, cloudlet);
+        }
+    }
+
     public void processVFpgaInfo(Payload payload) {
         VFpga vFpga = (VFpga) payload.getData().get(0);
         LOGGER.info(
@@ -282,10 +333,10 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         SegmentExecution segmentExecution = (SegmentExecution) payload.getData().get(0);
         VFpga vFpga = (VFpga) payload.getData().get(1);
 
-        if (segmentExecution.getSegment() != null) {
+        AccelerableSegment segment = segmentExecution.getSegment();
+        if (segment != null) {
             double executionTime = segmentExecution.getFinishTime() - segmentExecution.getSegmentArrivalTime();
 
-            AccelerableSegment segment = segmentExecution.getSegment();
             submittedSegmentList.remove(segment);
             finishedSegmentList.add(segment);
             segmentExecutionList.add(segmentExecution);
@@ -305,6 +356,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
                     vFpga.getManager().getFpga().getId(),
                     format2DecimalPlaces(vFpga.getCreatedAt()));
         }
+        trackCloudlet(segment.getCloudlet());
     }
 
     @Override

@@ -29,6 +29,7 @@ import org.cloudsimplus.builders.tables.TableBuilderAbstract;
 import org.cloudsimplus.builders.tables.TableColumn;
 import org.cloudsimplus.builders.tables.TextTable;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -44,9 +45,8 @@ import java.util.List;
  * @since CloudSim Plus 1.0
  */
 public class AccelerableCloudletsTableBuilder extends TableBuilderAbstract<AccelerableCloudlet> {
-    private static final String TIME_FORMAT = "%.0f";
+    private static final String TIME_FORMAT = "%.5f";
     private static final String SECONDS = "Seconds";
-    private static final String CPU_CORES = "CPU cores";
 
     /**
      * Instantiates a builder to print the list of AccelerableCloudlets using the a
@@ -73,27 +73,26 @@ public class AccelerableCloudletsTableBuilder extends TableBuilderAbstract<Accel
     @Override
     protected void createTableColumns() {
         final String ID = "ID";
-        addColumnDataFunction(getTable().addColumn("AccelerableCloudlet", ID), Identifiable::getId);
-        addColumnDataFunction(getTable().addColumn("Status "),
-                accelerableCloudlet -> accelerableCloudlet.getStatus().name());
-        addColumnDataFunction(getTable().addColumn("VFPGA", ID),
-//                accelerableCloudlet -> accelerableCloudlet.getSegmentAt(0).getAccelerator().getVFpga().getId());
-//        addColumnDataFunction(getTable().addColumn("Required", "Regions"),
-//                accelerableCloudlet -> accelerableCloudlet.getAccelerator().getVFpga().getRegions().size());
-//        addColumnDataFunction(getTable().addColumn("VM", ID),
-                accelerableCloudlet -> accelerableCloudlet.getVm().getId());
-        addColumnDataFunction(getTable().addColumn("CloudletLen", "MI"), AccelerableCloudlet::getLength);
-        addColumnDataFunction(getTable().addColumn("AccelerableLen", "MI"),
-                AccelerableCloudlet::getAccelerableLength);
+        addColumnDataFunction(getTable().addColumn("Cloudlet", ID), Identifiable::getId);
+        addColumnDataFunction(getTable().addColumn("Acc.Segments", "Count"), cloudlet -> cloudlet.getSegments().size());
+        addColumnDataFunction(getTable().addColumn("Acc.Length", "MI"),
+                cloudlet -> cloudlet.getSegments().stream().mapToLong(AccelerableSegment::getLength).sum());
+        addColumnDataFunction(getTable().addColumn("NAcc.Length", "MI"),
+                cloudlet -> cloudlet.getNonAccelerableSegments().getLength());
 
-        TableColumn col = getTable().addColumn("StartTime", SECONDS).setFormat(TIME_FORMAT);
-        addColumnDataFunction(col, AccelerableCloudlet::getExecStartTime);
+        Comparator<AccelerableSegment> startTimeComparator =
+                Comparator.comparingDouble(s -> s.getExecution().getSegmentArrivalTime());
+        Comparator<AccelerableSegment> finishTimeComparator =
+                Comparator.comparingDouble(s -> s.getExecution().getFinishTime());
 
-        col = getTable().addColumn("FinishTime", SECONDS).setFormat(TIME_FORMAT);
-        addColumnDataFunction(col, cl -> roundTime(cl, cl.getFinishTime()));
+        TableColumn col = getTable().addColumn("Acc.ExecTime", SECONDS).setFormat(TIME_FORMAT);
+        addColumnDataFunction(col,
+                cloudlet -> cloudlet.getSegments().stream().max(finishTimeComparator).get().getExecution().getFinishTime() -
+                        cloudlet.getSegments().stream().min(startTimeComparator).get().getExecution().getSegmentArrivalTime());
 
-        col = getTable().addColumn("ExecTime", SECONDS).setFormat(TIME_FORMAT);
-        addColumnDataFunction(col, cl -> roundTime(cl, cl.getActualCpuTime()));
+        col = getTable().addColumn("NAcc.ExecTime", SECONDS).setFormat(TIME_FORMAT);
+        addColumnDataFunction(col,
+                cloudlet -> cloudlet.getNonAccelerableSegments().getActualCpuTime());
     }
 
     /**

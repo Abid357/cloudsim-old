@@ -344,6 +344,8 @@ public final class CloudSimTags {
 
     public static final int REGION_SCHEDULING_FAIL = BASE + 71;
 
+    public static final int ALL_SEGMENTS_MERGED_RETURN = BASE + 72;
+
     /**
      * Private constructor to avoid class instantiation.
      */

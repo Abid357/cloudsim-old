@@ -17,6 +17,8 @@ public class AccelerableCloudlet extends CloudletSimple {
     private long length;
     private List<AccelerableSegment> segments;
     private Iterator<AccelerableSegment> iterator;
+    private CloudletSimple nonAccelerableSegments;
+    private double finishTime;
 
     public AccelerableCloudlet(long length, int pesNumber, UtilizationModel utilizationModel) {
         super(length, pesNumber, utilizationModel);
@@ -59,7 +61,7 @@ public class AccelerableCloudlet extends CloudletSimple {
             return null;
     }
 
-    public CloudletSimple getCloudletWithoutAccelerableSegments(){
+    public CloudletSimple getCloudletWithoutAccelerableSegments() {
         CloudletSimple cloudlet = new CloudletSimple(getId(), getTotalLength() - getAccelerableLength(),
                 getNumberOfPes());
         cloudlet.setBroker(getBroker());
@@ -73,6 +75,7 @@ public class AccelerableCloudlet extends CloudletSimple {
         cloudlet.setPriority(getPriority());
         cloudlet.setLastTriedDatacenter(getLastTriedDatacenter());
         cloudlet.setVm(getVm());
+        nonAccelerableSegments = cloudlet;
         return cloudlet;
     }
 
@@ -104,12 +107,25 @@ public class AccelerableCloudlet extends CloudletSimple {
         return segments.add(newSegment);
     }
 
+    public void setOverallFinishTime(double finishTime) {
+        this.finishTime = finishTime;
+    }
+
+    @Override
+    public double getFinishTime() {
+        return finishTime;
+    }
+
     public int getAccelerableSegmentCount() {
         return segments.size();
     }
 
     public long getAccelerableLength() {
-        return segments.stream().collect(Collectors.summingLong(AccelerableSegment::getLength));
+        return segments.stream().mapToLong(AccelerableSegment::getLength).sum();
+    }
+
+    public CloudletSimple getNonAccelerableSegments() {
+        return nonAccelerableSegments;
     }
 
     public boolean hasAccelerableLength() {

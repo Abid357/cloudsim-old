@@ -63,7 +63,9 @@ public class DatacenterFE extends DatacenterSimple {
     public void processEvent(final SimEvent evt) {
         if (processFpgaEvents(evt)) {
             return;
-        } else
+        } else if (evt.getTag() == CloudSimTags.CLOUDLET_RETURN)
+            unifiedManager.processEvent(evt);
+        else
             super.processEvent(evt);
     }
 

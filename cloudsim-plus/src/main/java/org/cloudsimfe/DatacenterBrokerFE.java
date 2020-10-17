@@ -30,6 +30,8 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
 
     private final List<AccelerableSegment> finishedSegments;
 
+    private final List<AccelerableCloudlet> finishedCloudlets;
+
     /**
      * Creates a DatacenterBroker giving a specific name.
      * Subclasses usually should provide this constructor and
@@ -42,6 +44,7 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
         super(simulation, name);
         this.acceleratorRequests = new ArrayList<>();
         this.finishedSegments = new ArrayList<>();
+        this.finishedCloudlets = new ArrayList<>();
     }
 
     @Override
@@ -62,6 +65,10 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
         return this;
     }
 
+    public List<AccelerableCloudlet> getCloudletFinishedList(){
+        return finishedCloudlets;
+    }
+
     @Override
     public void processEvent(SimEvent evt) {
         super.processEvent(evt);
@@ -69,7 +76,16 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
             requestAcceleratorCreation();
         } else if (evt.getTag() == CloudSimTags.VFPGA_SEGMENT_FINISH) {
             processSegmentFinish(evt);
+        }  else if (evt.getTag() == CloudSimTags.CLOUDLET_RETURN) {
+            getDatacenterList().get(0).processEvent(evt);
+        } else if (evt.getTag() == CloudSimTags.ALL_SEGMENTS_MERGED_RETURN){
+            processSegmentsMergedReturn(evt);
         }
+    }
+
+    private void processSegmentsMergedReturn(SimEvent evt){
+        AccelerableCloudlet cloudlet = (AccelerableCloudlet) evt.getData();
+        finishedCloudlets.add(cloudlet);
     }
 
     private void processSegmentFinish(SimEvent evt){
