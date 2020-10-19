@@ -161,7 +161,9 @@ public class AlAghbariExample {
 
 //        fpga.getVFpgaManager().printScheduledTiles();
 //        new SegmentsTableBuilder(broker0.getFinishedSegments()).setTitle("Acceleration Results").build();
-        new AccelerableCloudletsTableBuilder(broker0.getCloudletFinishedList()).setTitle("Cloudlet Execution Results").build();
+        new AccelerableCloudletsTableBuilder(broker0.getCloudletFinishedList()).setTitle("Accelerable Cloudlet " +
+                "Execution" +
+                " Results").build();
         if (!datacenter0.getFpgaList().isEmpty()) {
             new VFpgaTableBuilder(broker0.getVirtualFpgas()).setTitle("Virtual FPGAs").build();
             new ResourceUtilizationTableBuilder(broker0.getFinishedSegments()).setTitle("Resource Utilization").build();

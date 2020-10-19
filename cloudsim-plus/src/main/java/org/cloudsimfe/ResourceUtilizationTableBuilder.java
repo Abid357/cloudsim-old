@@ -69,14 +69,13 @@ public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<Accele
     @Override
     protected void createTableColumns() {
         final String ID = "ID";
+        addColumnDataFunction(getTable().addColumn("vFPGA", "ID"),
+                segment -> segment.getAccelerator().getVFpga().getId());
         addColumnDataFunction(getTable().addColumn(" Segment", "UID"), segment -> segment.getUniqueId());
         addColumnDataFunction(getTable().addColumn("SegmentType"),
                 segment -> segment.getType() == Accelerator.TYPE_IMAGE_PROCESSING ? "Image" :
                         segment.getType() == Accelerator.TYPE_ENCRYPTION ? "Encryption" :
                                 segment.getType() == Accelerator.TYPE_FAST_FOURIER_TRANSFORM ? "FFT" : "N/A");
-
-        addColumnDataFunction(getTable().addColumn("Accelerator", ID),
-                segment -> segment.getAccelerator().getAcceleratorId());
 
         addColumnDataFunction(getTable().addColumn("Regions", "Count"),
                 segment -> segment.getAccelerator().getVFpga().getRegions().size());
@@ -91,7 +90,7 @@ public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<Accele
                 segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedMemoryRegisters).sum() +
                         "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedMemoryRegisters).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getMemory() + "%)");
 
-        addColumnDataFunction(getTable().addColumn("   DSPs   "),
+        addColumnDataFunction(getTable().addColumn("    DSPs   "),
                 segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedDspSlices).sum() +
                         "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedDspSlices).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getDspSlices() + "%)");
 
