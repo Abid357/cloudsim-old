@@ -73,9 +73,7 @@ public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<Accele
                 segment -> segment.getAccelerator().getVFpga().getId());
         addColumnDataFunction(getTable().addColumn(" Segment", "UID"), segment -> segment.getUniqueId());
         addColumnDataFunction(getTable().addColumn("SegmentType"),
-                segment -> segment.getType() == Accelerator.TYPE_IMAGE_PROCESSING ? "Image" :
-                        segment.getType() == Accelerator.TYPE_ENCRYPTION ? "Encryption" :
-                                segment.getType() == Accelerator.TYPE_FAST_FOURIER_TRANSFORM ? "FFT" : "N/A");
+                segment -> segment.getAccelerator().getTypeInString());
 
         addColumnDataFunction(getTable().addColumn("Regions", "Count"),
                 segment -> segment.getAccelerator().getVFpga().getRegions().size());

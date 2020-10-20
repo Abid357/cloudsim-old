@@ -38,11 +38,11 @@ public class VFpga extends AddressableComponent {
         return estimatedFinishTime;
     }
 
-    public void addSegmentExecution(SegmentExecution segmentExecution){
+    public void addSegmentExecution(SegmentExecution segmentExecution) {
         segmentExecutionList.add(segmentExecution);
     }
 
-    public List<SegmentExecution> getSegmentExecutionList(){
+    public List<SegmentExecution> getSegmentExecutionList() {
         return segmentExecutionList;
     }
 
@@ -66,6 +66,10 @@ public class VFpga extends AddressableComponent {
         return destroyedAt;
     }
 
+    public void setDestroyedAt(double destroyedAt) {
+        this.destroyedAt = destroyedAt;
+    }
+
     public double getConfigurationTime() {
         return configurationTime;
     }
@@ -74,18 +78,14 @@ public class VFpga extends AddressableComponent {
         this.configurationTime = configurationTime;
     }
 
-    public void setDestroyedAt(double destroyedAt) {
-        this.destroyedAt = destroyedAt;
+    public Accelerator getAccelerator() {
+        return accelerator;
     }
 
     public void setAccelerator(Accelerator accelerator) {
         accelerator.setAdapter(adapter);
         accelerator.setVFpga(this);
         this.accelerator = accelerator;
-    }
-
-    public Accelerator getAccelerator(){
-        return accelerator;
     }
 
     public Adapter getAdapter() {

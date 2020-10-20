@@ -69,6 +69,21 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
             double time = vFpgaManager.updateProcessing(currentTime);
             nextSimulationTime = Math.min(time, nextSimulationTime);
         }
+
+        // synchronize any vFPGA that is configured across multiple FPGAs
+        for (int i = 0; i < vFpgaManagers.size(); i++) {
+            List<VFpga> destroyedVFpgasX = vFpgaManagers.get(i).getDestroyedVFpgas();
+            for (int j = 0; j < vFpgaManagers.size(); j++) {
+                if (j != i) {
+                    List<VFpga> destroyedVFpgasY = vFpgaManagers.get(j).getDestroyedVFpgas();
+                    for (VFpga destroyedX : destroyedVFpgasX)
+                        for (VFpga destroyedY : destroyedVFpgasY)
+                            if (destroyedX.getId() == destroyedY.getId())
+                                System.out.println("lel");
+                }
+            }
+        }
+
         if (nextSimulationTime != Double.MAX_VALUE)
             send(this, nextSimulationTime, CloudSimTags.VFPGA_UPDATE_SEGMENT_PROCESSING);
         return nextSimulationTime;
@@ -148,6 +163,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         int vFpgaId = (Integer) payload.getData().get(0);
         int row = (Integer) payload.getData().get(1);
         VFpgaManager vFpgaManager = (VFpgaManager) payload.getData().get(2);
+        int requiredRegionCount = (Integer) payload.getData().get(3);
         int acceleratorId = vFpgaManager.getVFpgaToAcceleratorMapping(vFpgaId);
 
         Netlist netlist = store.getNetlist(acceleratorId);
@@ -155,10 +171,10 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
                 netlist.getAccelerator().getOutputChannels());
 
         // bitstream generation
-        Bitstream bitstream = new Bitstream(adapter, netlist.getAccelerator(), netlist.getRequiredRegionCount(),
+        Bitstream bitstream = new Bitstream(adapter, netlist.getAccelerator(), requiredRegionCount,
                 netlist.getFileSize());
         List<Mapper> mappersForNextVFpga = new ArrayList<>();
-        for (int i = 0; i < bitstream.getRequiredRegionCount(); i++) {
+        for (int i = 0; i < requiredRegionCount; i++) {
             mappersForNextVFpga.add(new Mapper(vFpgaId, row + i + 1));
         }
 
@@ -208,9 +224,9 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
 
         double transferTime = 0.0;
         vFpga.getAccelerator().segmentSubmit(transferTime);
-        LOGGER.info("{}: {}: Accelerable segment {} successfully received by VFPGA {} in FPGA {}.",
+        LOGGER.info("{}: {}: Accelerable segment {} successfully received by vFPGA {}.",
                 getSimulation().clockStr(),
-                getClass().getSimpleName(), segment.getUniqueId(), vFpga.getId(), vFpga.getManager().getFpga().getId());
+                getClass().getSimpleName(), segment.getUniqueId(), vFpga.getId());
         sendNow(this, CloudSimTags.VFPGA_UPDATE_SEGMENT_PROCESSING);
     }
 
@@ -325,7 +341,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
     public void processVFpgaInfo(Payload payload) {
         VFpga vFpga = (VFpga) payload.getData().get(0);
         LOGGER.info(
-                "{}: {}: VFPGA {} successfully created on FPGA {}. Configuration time: {} seconds. Assigned IP" +
+                "{}: {}: vFPGA {} successfully created on FPGA {}. Configuration time: {} seconds. Assigned IP" +
                         "Address: {}",
                 getSimulation().clockStr(), getClass().getSimpleName(), vFpga.getId(),
                 vFpga.getManager().getFpga().getId(),
@@ -346,19 +362,32 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
             finishedSegmentList.add(segment);
             segmentExecutionList.add(segmentExecution);
 
-            LOGGER.info("{}: {}: Accelerable segment {} finished. VFPGA {} successfully destroyed on FPGA {}. " +
+            LOGGER.info("{}: {}: Accelerable segment {} finished. vFPGA {} successfully destroyed. " +
                             "Execution time: {} seconds",
                     getSimulation().clockStr(),
                     getClass().getSimpleName(), segmentExecution.getSegment().getUniqueId(), vFpga.getId(),
-                    vFpga.getManager().getFpga().getId(),
-                    (executionTime));
+                    executionTime);
+
+            // destroy vFPGA in other FPGAs if it is configured across multiple FPGAs
+            for (VFpgaManager manager : vFpgaManagers)
+                if (!vFpga.getManager().equals(manager)) {
+                    List<VFpga> combinedList = manager.getAllVirtualFPGAs();
+                    for (int i = 0; i < combinedList.size(); i++) {
+                        VFpga sameVFpga = combinedList.get(i);
+                        if (vFpga.getId() == sameVFpga.getId()) {
+                            sameVFpga.setCreatedAt(vFpga.getCreatedAt());
+                            sameVFpga.setConfigurationTime(vFpga.getConfigurationTime());
+                            manager.destroyVFpga(sameVFpga, vFpga.getDestroyedAt());
+                            break;
+                        }
+                    }
+                }
 
             sendNow(broker, CloudSimTags.VFPGA_SEGMENT_FINISH, segment);
         } else {
-            LOGGER.info("{}: {}: No accelerable segment processed in VFPGA {}. VFPGA successfully destroyed on FPGA " +
-                            "{}. Creation time: {}", getSimulation().clockStr(), getClass().getSimpleName(),
+            LOGGER.info("{}: {}: No accelerable segment processed in vFPGA {}. vFPGA successfully destroyed. Creation" +
+                            " time: {}", getSimulation().clockStr(), getClass().getSimpleName(),
                     vFpga.getId(),
-                    vFpga.getManager().getFpga().getId(),
                     format2DecimalPlaces(vFpga.getCreatedAt()));
         }
         trackCloudlet(segment.getCloudlet());

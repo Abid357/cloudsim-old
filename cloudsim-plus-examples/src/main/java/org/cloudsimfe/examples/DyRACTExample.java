@@ -133,7 +133,7 @@ public class DyRACTExample {
         videoProcessor.setClock(250);
         videoProcessor.setBroker(broker0);
 
-        Netlist netlist = new Netlist(videoProcessor, 12, 1, 2, 2);
+        Netlist netlist = new Netlist(videoProcessor, 20, 1, 2, 2);
         store.addNetlist(netlist);
 
         // CREATE CLOUDLET
