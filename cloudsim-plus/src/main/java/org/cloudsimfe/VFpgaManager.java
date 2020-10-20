@@ -245,6 +245,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
         boolean configureVFpga = false;
         long nextVFpgaId = -1;
         int row = 0;
+        int col;
         int listOffset = 0;
 
         int availableBlockCount = (int) availableBlocks.stream().filter(block -> block.booleanValue()).count();
@@ -255,8 +256,8 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
             listOffset++;
         // search for vFPGA ID based on scheduled tiles values
         for (; row < scheduledTiles.length; row++) {
-            if (availableBlocks.get(row + listOffset).booleanValue()) {
-                for (int col = 1; col < scheduledTiles[row].length && !configureVFpga; col++) {
+            if (availableBlocks.get(row + listOffset)) {
+                for (col = 1; col < scheduledTiles[row].length && !configureVFpga; col++) {
                     configureVFpga = true;
                     if (scheduledTiles[row][col] == 0) {
                         configureVFpga = false;
@@ -273,12 +274,15 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
                         configureVFpga = false;
                 }
 
-                for (int r = 0; r < scheduledTiles.length; r++)
-                    for (int c = 0; c < scheduledTiles[0].length; c++)
-                        if (scheduledTiles[r][c] == nextVFpgaId)
-                            requiredBlockCount++;
-                if (requiredBlockCount > availableBlockCount)
-                    configureVFpga = false;
+                if (configureVFpga) {
+                    int r = row;
+                    while (scheduledTiles[r][col-1] == nextVFpgaId){
+                        requiredBlockCount++;
+                        r++;
+                    }
+                    if (requiredBlockCount > availableBlockCount)
+                        configureVFpga = false;
+                }
 
                 if (configureVFpga) {
                     List<Object> data = new ArrayList<>();

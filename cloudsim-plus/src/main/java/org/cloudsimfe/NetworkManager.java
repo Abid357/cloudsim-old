@@ -5,9 +5,8 @@ import java.util.Map;
 
 public class NetworkManager extends AddressableComponent implements Clockable {
 
-    public static String NETWORK_MANAGER_ADDRESS;
-    public static String CONFIGURATION_MANAGER_ADDRESS;
-
+    private String networkManagerAddress;
+    private String configurationManagerAddress;
     private Fpga fpga;
     private DhcpServer server;
     private Router router;
@@ -80,12 +79,12 @@ public class NetworkManager extends AddressableComponent implements Clockable {
                 manager.assignIpAddress(ipAddress);
                 server.sendAck(ipAddress);
                 registerRoute(ipAddress, manager);
-                CONFIGURATION_MANAGER_ADDRESS = ipAddress;
+                configurationManagerAddress = ipAddress;
                 break;
             case "Packet": {
                 Packet packet = (Packet) payload.getData().get(0);
                 if (packet.getType() == Packet.BITSTREAM) {
-                    if (packet.getDestinationAddress().equals(CONFIGURATION_MANAGER_ADDRESS))
+                    if (packet.getDestinationAddress().equals(configurationManagerAddress))
                         packet.getPayload().addData(packet.getSourceAddress());
                     else
                         return;
@@ -114,7 +113,7 @@ public class NetworkManager extends AddressableComponent implements Clockable {
 
                     openSession(vFpga.getIpAddress(), dstAddress);
 
-                    Packet packet = new Packet(NETWORK_MANAGER_ADDRESS, dstAddress, Packet.VFPGA_INFO, payload);
+                    Packet packet = new Packet(networkManagerAddress, dstAddress, Packet.VFPGA_INFO, payload);
                     router.writeToBuffer(new Payload(packet));
                     router.route(dstAddress);
             }

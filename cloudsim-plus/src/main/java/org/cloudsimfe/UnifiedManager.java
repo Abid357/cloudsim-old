@@ -167,7 +167,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         packetData.add(mappersForNextVFpga);
         packetData.add(vFpgaId);
 
-        Packet packet = new Packet(getIpAddress(), NetworkManager.CONFIGURATION_MANAGER_ADDRESS,
+        Packet packet = new Packet(getIpAddress(), vFpgaManager.getFpga().getConfigurationManager().getIpAddress(),
                 Packet.BITSTREAM, new Payload(packetData));
         vFpgaManager.getFpga().getNetworkManager().sendDataToComponent(new Payload(packet));
     }

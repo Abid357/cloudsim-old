@@ -8,6 +8,7 @@ public class Accelerator extends CustomerEntityAbstract implements Clockable {
     public static final int TYPE_IMAGE_PROCESSING = 0;
     public static final int TYPE_ENCRYPTION = 1;
     public static final int TYPE_FAST_FOURIER_TRANSFORM = 2;
+    public static final int TYPE_VIDEO_PROCESSING = 3;
 
     /**
      * A static counter to automate ID generation of the accelerators
@@ -214,6 +215,8 @@ public class Accelerator extends CustomerEntityAbstract implements Clockable {
                 return "Encryption";
             case TYPE_FAST_FOURIER_TRANSFORM:
                 return "Fast Fourier Transformation (FFT)";
+            case TYPE_VIDEO_PROCESSING:
+                return "Video Processing";
         }
         return null;
     }
@@ -283,6 +286,6 @@ public class Accelerator extends CustomerEntityAbstract implements Clockable {
                 "Clock: " + clock + " MHz\n" +
                 "Input Channels: " + inputChannels + "\n" +
                 "Output Channels: " + outputChannels + "\n" +
-                "Status: " + status;
+                "Status: " +  (status == Accelerator.IDLE ? "IDLE" : "BUSY");
     }
 }
