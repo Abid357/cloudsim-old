@@ -118,7 +118,7 @@ public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<VFpga>
                         100.0 * vFpga.getRegions().stream().mapToLong(Region::getUtilizedTransceivers).sum() / vFpga.getManager().getFpga().getTransceivers()));
 
         addColumnDataFunction(getTable().addColumn(" PLL? ", "Yes/No"),
-                vFpga -> vFpga.getManager().getFpga().getClock() == vFpga.getAccelerator().getClockValue() ? "Yes" :
-                        "No");
+                vFpga -> vFpga.getManager().getFpga().getClock() == vFpga.getAccelerator().getClockValue() ? "No" :
+                        "Yes");
     }
 }

@@ -92,7 +92,7 @@ public class DyRACTExample {
                 .setLength(45)
                 .setWidth(45)
                 .setClock(600)
-                .setConfigurationClock(250)
+                .setConfigurationClock(100)
                 .setConfigurationBusWidth(ConfigurationManager.BUS_WIDTH_32_BIT)
                 .setPartitionPolicy(partitionPolicy)
                 .setStaticRegionCount(2)
@@ -112,14 +112,15 @@ public class DyRACTExample {
                 .setLength(45)
                 .setWidth(45)
                 .setClock(600)
-                .setConfigurationClock(250)
+                .setConfigurationClock(100)
                 .setConfigurationBusWidth(ConfigurationManager.BUS_WIDTH_32_BIT)
                 .setPartitionPolicy(partitionPolicy)
                 .setStaticRegionCount(2)
                 .build();
 
         // CREATE DATACENTER AND BROKER
-        datacenter0 = new DatacenterFE(simulation, Arrays.asList(host), Arrays.asList(fpga1, fpga2), server);
+        datacenter0 = new DatacenterFE(simulation, Arrays.asList(host), Arrays.asList(fpga1), server);
+        datacenter0.setName("DatacenterFE");
         broker0 = new DatacenterBrokerFE(simulation, "BrokerFE");
 
         // CREATE VM
@@ -128,28 +129,20 @@ public class DyRACTExample {
         vm.setRam(4000).setBw(1000).setSize(10000).setCloudletScheduler(new CloudletSchedulerSpaceShared());
 
         // CREATE ACCELERATOR
-        Accelerator videoProcessor = new Accelerator(2, 400,
-                40, Accelerator.TYPE_VIDEO_PROCESSING);
+        Accelerator videoProcessor = new Accelerator(2, 500,
+                30, Accelerator.TYPE_VIDEO_PROCESSING);
         videoProcessor.setClock(250);
         videoProcessor.setBroker(broker0);
 
-        Netlist netlist = new Netlist(videoProcessor, 20, 1, 2, 2);
+        Netlist netlist = new Netlist(videoProcessor, 20, 1, 2, 1);
         store.addNetlist(netlist);
 
         // CREATE CLOUDLET
-        AccelerableCloudlet frame1 = new AccelerableCloudlet(52,
+        AccelerableCloudlet frames = new AccelerableCloudlet(6000,
                 1);
-        frame1.addSegment(4, 48, Accelerator.TYPE_VIDEO_PROCESSING);
+        frames.addSegment(1261, 4739, Accelerator.TYPE_VIDEO_PROCESSING);
 
-        AccelerableCloudlet frame2 = new AccelerableCloudlet(52,
-                1);
-        frame2.addSegment(4, 48, Accelerator.TYPE_VIDEO_PROCESSING);
-
-        AccelerableCloudlet frame3 = new AccelerableCloudlet(52,
-                1);
-        frame3.addSegment(4, 48, Accelerator.TYPE_VIDEO_PROCESSING);
-
-        List<AccelerableCloudlet> videoFrames = Arrays.asList(frame1);
+        List<AccelerableCloudlet> videoFrames = Arrays.asList(frames);
         List<Accelerator> requestedAccelerators = createAcceleratorRequests(videoFrames);
 
         // SETUP
@@ -165,7 +158,7 @@ public class DyRACTExample {
         new AccelerableCloudletsTableBuilder(broker0.getCloudletFinishedList()).setTitle("Accelerable Cloudlet " +
                 "Execution" +
                 " Results").build();
-        if (!datacenter0.getFpgaList().isEmpty()) {
+        if (!datacenter0.getFpgaList().isEmpty() && datacenter0.getUnifiedManager().isSchedulingSuccessful()) {
             new VFpgaTableBuilder(broker0.getVirtualFpgas()).setTitle("Virtual FPGAs").build();
             new ResourceUtilizationTableBuilder(broker0.getVirtualFpgas()).setTitle("Resource Utilization").build();
         }

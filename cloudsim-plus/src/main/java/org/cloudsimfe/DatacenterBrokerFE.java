@@ -56,11 +56,9 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
 
         if (!acceleratorRequests.isEmpty()) {
             LOGGER.info(
-                    "{}: {}: List of {} accelerators submitted to the broker during simulation execution. " +
-                            "Accelerators creation request sent to Datacenter.",
+                    "{}: {}: List of {} accelerator(s) received.",
                     getSimulation().clockStr(), getName(), acceleratorRequests.size());
         }
-
     }
 
     public DatacenterBroker submitAcceleratorRequests(final List<Accelerator> accelerators) {
@@ -107,19 +105,18 @@ public class DatacenterBrokerFE extends DatacenterBrokerSimple {
         finishedSegments.add(segment);
     }
 
-    private int requestAcceleratorCreation() {
+    private void requestAcceleratorCreation() {
         DatacenterFE datacenter = (DatacenterFE) getDatacenterList().get(0);
         double submissionDelay =
                 acceleratorRequests.stream().max(comparing(accelerator -> accelerator.getSubmissionDelay())).get().getSubmissionDelay();
 
         LOGGER.info(
-                "{}: {}: Invoking region scheduler in {}",
+                "{}: {}: Invoking region scheduler in {}.",
                 getSimulation().clockStr(), getName(), datacenter.getName());
         send(datacenter.getUnifiedManager(), submissionDelay, CloudSimTags.SCHEDULE_PARTITIONED_REGIONS,
                 acceleratorRequests);
 
         acceleratorRequests.forEach(accelerator -> accelerator.setLastTriedDatacenter(datacenter));
-        return acceleratorRequests.size();
     }
 
     public List<AccelerableSegment> getFinishedSegments() {

@@ -92,14 +92,14 @@ public class AlAghbariExample {
                 .setLength(43)
                 .setWidth(43)
                 .setClock(600)
-                .setConfigurationClock(250)
-                .setConfigurationBusWidth(ConfigurationManager.BUS_WIDTH_128_BIT)
+                .setConfigurationClock(100)
+                .setConfigurationBusWidth(ConfigurationManager.BUS_WIDTH_16_BIT)
                 .setPartitionPolicy(partitionPolicy)
                 .setStaticRegionCount(1)
                 .build();
 
         // CREATE DATACENTER AND BROKER
-        datacenter0 = new DatacenterFE(simulation, Arrays.asList(host), Arrays.asList(fpga), server);
+        datacenter0 = new DatacenterFE(simulation, Arrays.asList(host), Arrays.asList(), server);
         broker0 = new DatacenterBrokerFE(simulation, "BrokerFE");
 
         // CREATE VM
@@ -112,7 +112,7 @@ public class AlAghbariExample {
                 40, Accelerator.TYPE_IMAGE_PROCESSING);
         imageProcessor.setBroker(broker0);
 
-        Netlist netlist = new Netlist(imageProcessor, 2, 1, 3, 1);
+        Netlist netlist = new Netlist(imageProcessor, 2, 1, 3, 5);
         store.addNetlist(netlist);
 
         // CREATE CLOUDLET
@@ -164,7 +164,7 @@ public class AlAghbariExample {
         new AccelerableCloudletsTableBuilder(broker0.getCloudletFinishedList()).setTitle("Accelerable Cloudlet " +
                 "Execution" +
                 " Results").build();
-        if (!datacenter0.getFpgaList().isEmpty()) {
+        if (!datacenter0.getFpgaList().isEmpty() && datacenter0.getUnifiedManager().isSchedulingSuccessful()) {
             new VFpgaTableBuilder(broker0.getVirtualFpgas()).setTitle("Virtual FPGAs").build();
             new ResourceUtilizationTableBuilder(broker0.getVirtualFpgas()).setTitle("Resource Utilization").build();
         }

@@ -40,7 +40,7 @@ public class DatacenterFE extends DatacenterSimple {
             sendNow(cloudlet.getBroker(), CloudSimTags.CLOUDLET_RETURN, cloudlet);
         }
 
-        if (!fpgaList.isEmpty()) {
+        if (!fpgaList.isEmpty() && unifiedManager.isSchedulingSuccessful()) {
             CloudletSimple cloudletWithoutSegments = cloudlet.getCloudletWithoutAccelerableSegments();
             modifiedEvt = new CloudSimEvent(evt.getDestination(), evt.getTag(), cloudletWithoutSegments);
             unifiedManager.submitAccelerableSegments(cloudlet.getSegments());
@@ -110,8 +110,10 @@ public class DatacenterFE extends DatacenterSimple {
         unifiedManager.assignIpAddress(server.requestIpAddress());
         server.sendAck(unifiedManager.getIpAddress());
 
-        for (Fpga fpga : fpgaList)
+        for (Fpga fpga : fpgaList) {
             fpga.getNetworkManager().registerRoute(unifiedManager.getIpAddress(), unifiedManager);
+            fpga.setAssignedDatacenter(this);
+        }
     }
 
     public List<Fpga> getFpgaList() {

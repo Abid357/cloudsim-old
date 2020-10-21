@@ -5,11 +5,15 @@ import org.cloudbus.cloudsim.core.CloudSimEntity;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.Simulation;
 import org.cloudbus.cloudsim.core.events.SimEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.PrintStream;
 import java.util.*;
 
 public class VFpgaManager extends CloudSimEntity implements Addressable, Clockable {
+    private Logger LOGGER = LoggerFactory.getLogger(VFpgaManager.class.getSimpleName());
+
     private Fpga fpga;
     private List<VFpga> createdVFpgas;
     private List<VFpga> destroyedVFpgas;
@@ -64,7 +68,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
         }
     }
 
-    public void destroyVFpga(VFpga vFpga, double currentTime){
+    public void destroyVFpga(VFpga vFpga, double currentTime) {
         vFpga.setDestroyedAt(currentTime);
         destroyedVFpgas.add(vFpga);
         deallocateBlocks(vFpga.getId());
@@ -82,8 +86,9 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
         vFpga.setAccelerator(bitstream.getAccelerator());
         vFpga.setConfigurationTime(configurationTime);
 
-        for (Mapper mapper : vFpgaMappers){
-            availableBlocks.set(mapper.getBlockInHypervisor() , false);}
+        for (Mapper mapper : vFpgaMappers) {
+            availableBlocks.set(mapper.getBlockInHypervisor(), false);
+        }
         mappers.addAll(vFpgaMappers);
 
         createdVFpgas.add(vFpga);
@@ -287,7 +292,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
 
                 int r = row;
                 if (configureVFpga) {
-                    while (r < scheduledTiles.length && scheduledTiles[r][col-1] == nextVFpgaId){
+                    while (r < scheduledTiles.length && scheduledTiles[r][col - 1] == nextVFpgaId) {
                         requiredBlockCount++;
                         r++;
                     }
@@ -316,7 +321,14 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
 
     @Override
     protected void startEntity() {
+        if (fpga.getAssignedDatacenter() != null)
+            LOGGER.info("FPGA {} Hypervisor is starting...", getFpga().getId());
+    }
 
+    @Override
+    public void shutdownEntity() {
+        if (fpga.getAssignedDatacenter() != null)
+            LOGGER.info("FPGA {} Hypervisor is shutting down...", getFpga().getId());
     }
 
     public void processReconfigurationFinish(SimEvent evt) {

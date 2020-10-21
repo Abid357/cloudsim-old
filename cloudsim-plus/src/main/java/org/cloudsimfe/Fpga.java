@@ -1,6 +1,7 @@
 package org.cloudsimfe;
 
 import org.cloudbus.cloudsim.core.Simulation;
+import org.cloudbus.cloudsim.datacenters.Datacenter;
 
 import java.awt.*;
 import java.io.PrintStream;
@@ -123,6 +124,11 @@ public class Fpga {
      * Width of the FPGA chip. It is measured in millimeters (mm).
      */
     private float width;
+
+    /**
+     * Datacenter that contains this physical FPGA.
+     */
+    private Datacenter assignedDatacenter;
 
     /**
      * Configuration manager of the FPGA.
@@ -319,6 +325,14 @@ public class Fpga {
                 ", length=" + length +
                 ", width=" + width +
                 '}';
+    }
+
+    public Datacenter getAssignedDatacenter() {
+        return assignedDatacenter;
+    }
+
+    public void setAssignedDatacenter(Datacenter assignedDatacenter) {
+        this.assignedDatacenter = assignedDatacenter;
     }
 
     public int getId() {

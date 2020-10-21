@@ -75,9 +75,9 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
 
         // calculate configuration time based on bitstream file size, configuration clock and bus width
         long bitstreamLength = bitstream.getFileSize() * 8 * 1000000; // megabytes to bits
+        long clockInHertz = clock * 1000000;
         double configurationTime =
-                (bitstreamLength / (double) busWidth) * (1.0 / clock);
-        configurationTime /= 1000; // seconds to milliseconds
+                (bitstreamLength / (double) busWidth) * (1.0 / clockInHertz);
 
         fpga.getVFpgaManager().createVFpga(configuredRegions, configurationTime, payload);
     }

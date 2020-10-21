@@ -30,6 +30,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
     private RegionScheduler scheduler;
     private DecimalFormat format;
     private NetlistStore store;
+    private boolean schedulingSuccessful;
 
     public UnifiedManager(Simulation simulation, List<VFpgaManager> vFpgaManagers) {
         super(simulation);
@@ -85,9 +86,6 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
             }
         }
         for (VFpgaManager vFpgaManager : vFpgaManagers) {
-            vFpgaManager.createTiles();
-            vFpgaManager.setUnifiedManager(this);
-
             long tiles[][] = vFpgaManager.getTiles();
             for (int i = 0; i < tiles.length; i++, b++) {
                 tiles[i] = new long[timeSlots + 1];
@@ -115,22 +113,43 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         if (vFpgaManagers.isEmpty()) {
             sendNow(datacenter, CloudSimTags.REGION_SCHEDULING_FAIL);
             return;
+        } else { // create schedule tiles with zeros to avoid crash during segment processing
+            for (VFpgaManager vFpgaManager : vFpgaManagers) {
+                vFpgaManager.setUnifiedManager(this);
+                vFpgaManager.createTiles();
+                long tiles[][] = vFpgaManager.getTiles();
+                for (int i = 0; i < tiles.length; i++)
+                    tiles[i] = new long[2]; // defaulted to zeros
+            }
         }
 
+        int requiredRegionCount = 0;
         List<ConfigurationTask> tasks = new ArrayList<>();
         for (Accelerator accelerator : accelerators) {
             Netlist netlist = store.getNetlist(accelerator.getAcceleratorId());
             int id = ConfigurationTask.TASK_ID++;
-            int tile = netlist.getRequiredRegionCount();
+            int regionCount = netlist.getRequiredRegionCount();
+            requiredRegionCount += regionCount;
             int executionTime = netlist.getRequiredExecutionTime();
             int deadline = netlist.getDeadline();
-            tasks.add(new ConfigurationTask(id, accelerator.getAcceleratorId(), tile, executionTime, deadline));
+            tasks.add(new ConfigurationTask(id, accelerator.getAcceleratorId(), regionCount, executionTime, deadline));
         }
 
-        int regionCount = getTotalRegionCount();
-        scheduler.schedule(vFpgaManagers.size(), regionCount, tasks);
-        send(datacenter, getSchedulingDurationInSeconds(), CloudSimTags.REGION_SCHEDULING_FINISH,
-                scheduler.getSchedulingDuration());
+        int availableRegionCount = getTotalRegionCount();
+
+        if (requiredRegionCount <= availableRegionCount) {
+            schedulingSuccessful = true;
+            scheduler.schedule(vFpgaManagers.size(), availableRegionCount, tasks);
+            send(datacenter, getSchedulingDurationInSeconds(), CloudSimTags.REGION_SCHEDULING_FINISH,
+                    scheduler.getSchedulingDuration());
+        } else {
+            schedulingSuccessful = false;
+            LOGGER.warn("{}: {}: Region scheduling failed. There are insufficient resources in the FPGA pool.",
+                    getSimulation().clockStr(), getClass().getSimpleName());
+            LOGGER.warn("{}: {}: No accelerator was configured. Accelerable segments will now be directed to VMs " +
+                            "instead.",
+                    getSimulation().clockStr(), getClass().getSimpleName());
+        }
     }
 
     public void setNetlistStore(NetlistStore store) {
@@ -286,6 +305,10 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         return ipAddress;
     }
 
+    public boolean isSchedulingSuccessful() {
+        return schedulingSuccessful;
+    }
+
     public void trackCloudlet(AccelerableCloudlet cloudlet) {
         Cloudlet nonAccelerableSegments = cloudlet.getNonAccelerableSegments();
         List<AccelerableSegment> accelerableSegments = cloudlet.getSegments();
@@ -300,7 +323,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
                 cloudlet.getSegments().stream().peek(segment -> segment.addFinishedLengthSoFar(segment.getLength()));
             } else
                 for (AccelerableSegment segment : accelerableSegments)
-                    if (!segment.isFinished()) {
+                    if (!segment.isFinished() && schedulingSuccessful) {
                         notifyBroker = false;
                         break;
                     }
@@ -312,7 +335,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
             minStartTime = Math.min(minStartTime, nonAccelerableSegments.getExecStartTime());
             maxFinishTime = Math.max(maxFinishTime, nonAccelerableSegments.getFinishTime());
 
-            if (!vFpgaManagers.isEmpty())
+            if (!vFpgaManagers.isEmpty() && schedulingSuccessful)
                 for (AccelerableSegment segment : accelerableSegments) {
                     minStartTime = Math.min(minStartTime, segment.getExecution().getSegmentArrivalTime());
                     maxFinishTime = Math.max(maxFinishTime,
