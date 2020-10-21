@@ -82,9 +82,10 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
         vFpga.setAccelerator(bitstream.getAccelerator());
         vFpga.setConfigurationTime(configurationTime);
 
-        for (Mapper mapper : vFpgaMappers)
-            availableBlocks.set(mapper.getBlockInHypervisor(), false);
+        for (Mapper mapper : vFpgaMappers){
+            availableBlocks.set(mapper.getBlockInHypervisor() , false);}
         mappers.addAll(vFpgaMappers);
+
         createdVFpgas.add(vFpga);
         vFpga.setCreatedAt(getSimulation().clock());
 
@@ -284,12 +285,13 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
                         configureVFpga = false;
                 }
 
+                int r = row;
                 if (configureVFpga) {
-                    int r = row;
                     while (r < scheduledTiles.length && scheduledTiles[r][col-1] == nextVFpgaId){
                         requiredBlockCount++;
                         r++;
                     }
+                    r--;
                     if (requiredBlockCount > availableBlockCount)
                         configureVFpga = false;
                 }
@@ -303,6 +305,8 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
 
                     sendNow(manager, CloudSimTags.VFPGA_DYNAMIC_PARTIAL_RECONFIGURATION, new Payload(data));
                     configureVFpga = false;
+                    requiredBlockCount = 0;
+                    row = r;
                 }
             }
         }

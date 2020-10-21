@@ -72,11 +72,15 @@ public class VFpgaTableBuilder extends TableBuilderAbstract<VFpga> {
         addColumnDataFunction(getTable().addColumn("vFPGA", ID), vFpga -> vFpga.getId());
         addColumnDataFunction(getTable().addColumn("   IPv4-Address"), vFpga -> vFpga.getIpAddress());
         addColumnDataFunction(getTable().addColumn("FPGA", ID), vFpga -> vFpga.getManager().getFpga().getId());
-        addColumnDataFunction(getTable().addColumn("Accelerator", ID), vFpga -> vFpga.getAccelerator().getAcceleratorId());
+        addColumnDataFunction(getTable().addColumn("Accelerator", ID),
+                vFpga -> vFpga.getAccelerator().getAcceleratorId());
         addColumnDataFunction(getTable().addColumn("Regions", "Count"), vFpga -> vFpga.getRegions().size());
-        addColumnDataFunction(getTable().addColumn("  Input", "Channel"), vFpga -> vFpga.getAccelerator().getInputChannels());
+        addColumnDataFunction(getTable().addColumn("  Input", "Channel"),
+                vFpga -> vFpga.getAccelerator().getInputChannels() == 0 ? "" :
+                        vFpga.getAccelerator().getInputChannels());
         addColumnDataFunction(getTable().addColumn(" Output", "Channel"),
-                vFpga -> vFpga.getAccelerator().getOutputChannels());
+                vFpga -> vFpga.getAccelerator().getOutputChannels() == 0 ? "" :
+                        vFpga.getAccelerator().getOutputChannels());
         addColumnDataFunction(getTable().addColumn("ConfigTime", "Seconds").setFormat(TIME_FORMAT),
                 vFpga -> vFpga.getConfigurationTime());
         addColumnDataFunction(getTable().addColumn("ExecTime", "Seconds").setFormat(TIME_FORMAT),

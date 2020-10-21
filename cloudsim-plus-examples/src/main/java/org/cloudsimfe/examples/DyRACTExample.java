@@ -167,7 +167,7 @@ public class DyRACTExample {
                 " Results").build();
         if (!datacenter0.getFpgaList().isEmpty()) {
             new VFpgaTableBuilder(broker0.getVirtualFpgas()).setTitle("Virtual FPGAs").build();
-            new ResourceUtilizationTableBuilder(broker0.getFinishedSegments()).setTitle("Resource Utilization").build();
+            new ResourceUtilizationTableBuilder(broker0.getVirtualFpgas()).setTitle("Resource Utilization").build();
         }
     }
 

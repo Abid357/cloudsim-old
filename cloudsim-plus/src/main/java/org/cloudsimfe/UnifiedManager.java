@@ -70,20 +70,6 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
             nextSimulationTime = Math.min(time, nextSimulationTime);
         }
 
-        // synchronize any vFPGA that is configured across multiple FPGAs
-        for (int i = 0; i < vFpgaManagers.size(); i++) {
-            List<VFpga> destroyedVFpgasX = vFpgaManagers.get(i).getDestroyedVFpgas();
-            for (int j = 0; j < vFpgaManagers.size(); j++) {
-                if (j != i) {
-                    List<VFpga> destroyedVFpgasY = vFpgaManagers.get(j).getDestroyedVFpgas();
-                    for (VFpga destroyedX : destroyedVFpgasX)
-                        for (VFpga destroyedY : destroyedVFpgasY)
-                            if (destroyedX.getId() == destroyedY.getId())
-                                System.out.println("lel");
-                }
-            }
-        }
-
         if (nextSimulationTime != Double.MAX_VALUE)
             send(this, nextSimulationTime, CloudSimTags.VFPGA_UPDATE_SEGMENT_PROCESSING);
         return nextSimulationTime;
@@ -173,6 +159,7 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
         // bitstream generation
         Bitstream bitstream = new Bitstream(adapter, netlist.getAccelerator(), requiredRegionCount,
                 netlist.getFileSize());
+
         List<Mapper> mappersForNextVFpga = new ArrayList<>();
         for (int i = 0; i < requiredRegionCount; i++) {
             mappersForNextVFpga.add(new Mapper(vFpgaId, row + i + 1));
@@ -375,9 +362,12 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
                     for (int i = 0; i < combinedList.size(); i++) {
                         VFpga sameVFpga = combinedList.get(i);
                         if (vFpga.getId() == sameVFpga.getId()) {
-                            sameVFpga.setCreatedAt(vFpga.getCreatedAt());
-                            sameVFpga.setConfigurationTime(vFpga.getConfigurationTime());
-                            manager.destroyVFpga(sameVFpga, vFpga.getDestroyedAt());
+                            sameVFpga.setCreatedAt(0);
+                            sameVFpga.setConfigurationTime(0);
+                            sameVFpga.getAccelerator().setInputChannels(0);
+                            sameVFpga.getAccelerator().setOutputChannels(0);
+                            sameVFpga.withdrawIpAddress();
+                            manager.destroyVFpga(sameVFpga, 0);
                             break;
                         }
                     }

@@ -40,8 +40,9 @@ import java.util.List;
  * @author Manoel Campos da Silva Filho
  * @since CloudSim Plus 1.0
  */
-public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<AccelerableSegment> {
+public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<VFpga> {
     private static final String TIME_FORMAT = "%.5f";
+    private static final String PERCENT_FORMAT = "%d(%.2f%%)";
     private static final String SECONDS = "Seconds";
 
     /**
@@ -51,7 +52,7 @@ public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<Accele
      *
      * @param list the list of Cloudlets to print
      */
-    public ResourceUtilizationTableBuilder(final List<? extends AccelerableSegment> list) {
+    public ResourceUtilizationTableBuilder(final List<? extends VFpga> list) {
         super(list);
     }
 
@@ -62,7 +63,7 @@ public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<Accele
      * @param list  the list of Cloudlets to print
      * @param table the {@link Table} used to build the table with the Cloudlets data
      */
-    public ResourceUtilizationTableBuilder(final List<? extends AccelerableSegment> list, final Table table) {
+    public ResourceUtilizationTableBuilder(final List<? extends VFpga> list, final Table table) {
         super(list, table);
     }
 
@@ -70,41 +71,54 @@ public class ResourceUtilizationTableBuilder extends TableBuilderAbstract<Accele
     protected void createTableColumns() {
         final String ID = "ID";
         addColumnDataFunction(getTable().addColumn("vFPGA", "ID"),
-                segment -> segment.getAccelerator().getVFpga().getId());
-        addColumnDataFunction(getTable().addColumn(" Segment", "UID"), segment -> segment.getUniqueId());
-        addColumnDataFunction(getTable().addColumn("SegmentType"),
-                segment -> segment.getAccelerator().getTypeInString());
+                vFpga -> vFpga.getId());
+        addColumnDataFunction(getTable().addColumn("Segment", "UID"),
+                vFpga -> vFpga.getSegmentExecutionList().size() > 1 ? "(many)" :
+                        vFpga.getSegmentExecutionList().size() == 0 ? "" :
+                                vFpga.getSegmentExecutionList().get(0).getSegment().getUniqueId());
+        addColumnDataFunction(getTable().addColumn("  SegmentType   "),
+                vFpga -> vFpga.getSegmentExecutionList().size() > 1 ? "(many)" :
+                        vFpga.getSegmentExecutionList().size() == 0 ? "" :
+                                vFpga.getSegmentExecutionList().get(0).getSegment().getAccelerator().getTypeInString());
 
         addColumnDataFunction(getTable().addColumn("Regions", "Count"),
-                segment -> segment.getAccelerator().getVFpga().getRegions().size());
+                vFpga -> vFpga.getRegions().size());
 
         addColumnDataFunction(getTable().addColumn("FPGA", ID),
-                segment -> segment.getAccelerator().getVFpga().getManager().getFpga().getId());
+                vFpga -> vFpga.getManager().getFpga().getId());
 
-        addColumnDataFunction(getTable().addColumn(" LogicElements"),
-                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedLogicElements).sum() + "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedLogicElements).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getLogicElements() + "%)");
+        addColumnDataFunction(getTable().addColumn(" LogicElements "),
+                vFpga -> String.format(PERCENT_FORMAT,
+                        vFpga.getRegions().stream().mapToLong(Region::getUtilizedLogicElements).sum(),
+                        100.0 * vFpga.getRegions().stream().mapToLong(Region::getUtilizedLogicElements).sum() / vFpga.getManager().getFpga().getLogicElements()));
 
         addColumnDataFunction(getTable().addColumn("MemoryRegisters"),
-                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedMemoryRegisters).sum() +
-                        "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedMemoryRegisters).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getMemory() + "%)");
+                vFpga -> String.format(PERCENT_FORMAT,
+                        vFpga.getRegions().stream().mapToLong(Region::getUtilizedMemoryRegisters).sum(),
+                        100.0 * vFpga.getRegions().stream().mapToLong(Region::getUtilizedMemoryRegisters).sum() / vFpga.getManager().getFpga().getMemory()));
 
-        addColumnDataFunction(getTable().addColumn("    DSPs   "),
-                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedDspSlices).sum() +
-                        "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedDspSlices).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getDspSlices() + "%)");
+        addColumnDataFunction(getTable().addColumn("     DSPs    "),
+                vFpga -> String.format(PERCENT_FORMAT,
+                        vFpga.getRegions().stream().mapToLong(Region::getUtilizedDspSlices).sum(),
+                        100.0 * vFpga.getRegions().stream().mapToLong(Region::getUtilizedDspSlices).sum() / vFpga.getManager().getFpga().getDspSlices()));
 
-        addColumnDataFunction(getTable().addColumn("BlockedRAMs"),
-                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedBlockedRams).sum() +
-                        "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedBlockedRams).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getBlockedRams() + "%)");
+        addColumnDataFunction(getTable().addColumn(" BlockedRAMs "),
+                vFpga -> String.format(PERCENT_FORMAT,
+                        vFpga.getRegions().stream().mapToLong(Region::getUtilizedBlockedRams).sum(),
+                        100.0 * vFpga.getRegions().stream().mapToLong(Region::getUtilizedBlockedRams).sum() / vFpga.getManager().getFpga().getBlockedRams()));
 
-        addColumnDataFunction(getTable().addColumn("  I/OPins  "),
-                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedIoPins).sum() +
-                        "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedIoPins).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getIo() + "%)");
+        addColumnDataFunction(getTable().addColumn("   I/OPins   "),
+                vFpga -> String.format(PERCENT_FORMAT,
+                        vFpga.getRegions().stream().mapToLong(Region::getUtilizedIoPins).sum(),
+                        100.0 * vFpga.getRegions().stream().mapToLong(Region::getUtilizedIoPins).sum() / vFpga.getManager().getFpga().getIo()));
 
         addColumnDataFunction(getTable().addColumn("Transceivers"),
-                segment -> segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedTransceivers).sum() +
-                        "(" + 100.0* segment.getAccelerator().getVFpga().getRegions().stream().mapToLong(Region::getUtilizedTransceivers).sum() / segment.getAccelerator().getVFpga().getManager().getFpga().getTransceivers() + "%)");
+                vFpga -> String.format(PERCENT_FORMAT,
+                        vFpga.getRegions().stream().mapToLong(Region::getUtilizedTransceivers).sum(),
+                        100.0 * vFpga.getRegions().stream().mapToLong(Region::getUtilizedTransceivers).sum() / vFpga.getManager().getFpga().getTransceivers()));
 
         addColumnDataFunction(getTable().addColumn(" PLL? ", "Yes/No"),
-                segment -> segment.getAccelerator().getVFpga().getManager().getFpga().getClock() == segment.getAccelerator().getClockValue() ? "Yes" : "No");
+                vFpga -> vFpga.getManager().getFpga().getClock() == vFpga.getAccelerator().getClockValue() ? "Yes" :
+                        "No");
     }
 }
