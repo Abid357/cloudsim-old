@@ -136,7 +136,7 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
 
     public void deallocateRegionByIndex(int index) {
         regions.get(index).setAvailable(true);
-        int row = index / map.length;
+        int row = index / map[0].length;
         int col = index % map[0].length;
         map[row][col] = 0;
     }

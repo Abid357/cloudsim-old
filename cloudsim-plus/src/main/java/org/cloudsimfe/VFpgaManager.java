@@ -376,11 +376,18 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
 
     @Override
     public void sendDataToComponent(Payload payload) {
-        String ipAddress = (String) payload.getData().get(1);
-        payload.removeData(1);
+        String ipAddress;
+        if (payload.getData().size() == 2) {
+            ipAddress = (String) payload.getData().get(1);
+            payload.removeData(1);
+        }
+        else{
+            ipAddress = (String) payload.getData().get(2);
+            payload.removeData(2);
+        }
 
         for (VFpga vFpga : createdVFpgas) {
-            if (vFpga.getIpAddress().equals(ipAddress)) {
+            if (vFpga.getIpAddress() != null && vFpga.getIpAddress().equals(ipAddress)) {
                 vFpga.getAdapter().writeToBuffer(payload, Adapter.READ_BUFFER);
                 payload.addData(vFpga);
                 sendNow(manager, CloudSimTags.VFPGA_SEGMENT_ACK, payload);

@@ -95,8 +95,7 @@ public class NetworkManager extends AddressableComponent implements Clockable {
                     String session = getSession(vFpgaAddress);
                     if (session != null && session.equals(userAddress))
                         packet.getPayload().addData(vFpgaAddress);
-                    else
-                        packet.getPayload().addData(false); // error - user session does not exist
+                       // else user session does not exist
                 }
                 router.writeToBuffer(packet.getPayload());
                 router.route(packet.getDestinationAddress());
@@ -128,7 +127,7 @@ public class NetworkManager extends AddressableComponent implements Clockable {
                     router.writeToBuffer(new Payload(packet));
                     router.route(session);
                 } else {
-                    payload.addData(false); // error - user session does not exist
+                    // error - user session does not exist
                     router.writeToBuffer(payload);
                     router.route(vFpgaAddress);
                 }
