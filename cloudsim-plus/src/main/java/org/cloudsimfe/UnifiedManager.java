@@ -158,8 +158,10 @@ public class UnifiedManager extends CloudSimEntity implements Addressable {
 
     public int getTotalRegionCount() {
         int count = 0;
-        for (VFpgaManager vFpgaManager : vFpgaManagers)
+        for (VFpgaManager vFpgaManager : vFpgaManagers) {
             count += vFpgaManager.getReconfigurableRegionCount();
+            System.out.println("Static=" + vFpgaManager.getFpga().getConfigurationManager().getStaticRegions().size());
+        }
         return count;
     }
 

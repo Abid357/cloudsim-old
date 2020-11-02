@@ -181,7 +181,7 @@ public class Fpga {
      * @param clockManager         {@link ClockManager}
      */
     private Fpga(int id, String brand, String family, String model, long le, long memory, int bram, int dsp, int io,
-                 int transceiver, int clock, int pll,
+                 int transceiver, long clock, int pll,
                  float length, float width, ConfigurationManager configurationManager, NetworkManager networkManager,
                  VFpgaManager vFpgaManager, ClockManager clockManager) {
         this.id = id;
@@ -339,6 +339,10 @@ public class Fpga {
         return id;
     }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
     public String getBrand() {
         return brand;
     }
@@ -403,6 +407,29 @@ public class Fpga {
         return vFpgaManager;
     }
 
+    public Fpga copy(Simulation simulation, int id, DhcpServer server, PartitionPolicy policy){
+        Fpga fpga = new Fpga.Builder(simulation, id, server)
+                .setBrand(brand)
+                .setFamily(family)
+                .setModel(model)
+                .setLogicElements(le)
+                .setMemoryRegisters(memory)
+                .setBlockedRams(bram)
+                .setDspSlices(dsp)
+                .setIoPins(io)
+                .setTransceivers(transceiver)
+                .setClock(clock)
+                .setPhaseLockedLoops(pll)
+                .setLength(length)
+                .setWidth(width)
+                .setConfigurationClock(configurationManager.getClockValue())
+                .setConfigurationBusWidth(configurationManager.getBusWidth())
+                .setPartitionPolicy(policy)
+                .setStaticRegionCount(1)
+                .build();
+        return fpga;
+    }
+
     /**
      * List of FPGA resource types.
      */
@@ -425,7 +452,7 @@ public class Fpga {
         private int dsp;
         private int io;
         private int transceiver;
-        private int clock;
+        private long clock;
         private int pll;
         private float length;
         private float width;
@@ -578,7 +605,7 @@ public class Fpga {
          * @param clock {@link org.cloudsimfe.Fpga#clock}
          * @return this {@link org.cloudsimfe.Fpga.Builder} object
          */
-        public Builder setClock(int clock) {
+        public Builder setClock(long clock) {
             this.clock = clock;
             return this;
         }

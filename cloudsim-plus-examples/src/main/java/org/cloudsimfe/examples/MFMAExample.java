@@ -139,7 +139,18 @@ public class MFMAExample {
                 .build();
 
         // CREATE DATACENTER AND BROKER
-        datacenter0 = new DatacenterFE(simulation, Arrays.asList(host), Arrays.asList(fpga1, fpga2, fpga3), server);
+        List<Fpga> fpgaList = new ArrayList<>();
+        fpgaList.addAll(Arrays.asList(fpga1, fpga2, fpga3));
+
+        List<Fpga> scalableFpgaList = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            if (i % 5 == 0)
+                scalableFpgaList.add(fpgaList.get(2).copy(simulation, i + 1, server, partitionPolicy));
+            else
+                scalableFpgaList.add(fpgaList.get(i % fpgaList.size()).copy(simulation, i + 1, server, partitionPolicy));
+        }
+
+        datacenter0 = new DatacenterFE(simulation, Arrays.asList(host), scalableFpgaList, server);
         datacenter0.setName("DatacenterFE");
         broker0 = new DatacenterBrokerFE(simulation, "BrokerFE");
 

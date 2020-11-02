@@ -90,7 +90,7 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
                 if (index != -1) {
                     regions.get(index).setStatic(true);
                     regions.get(index).setAvailable(false);
-                    int row = index / map.length;
+                    int row = index / map[0].length;
                     int col = index % map[0].length;
                     map[row][col] = -1;
                 }
@@ -150,44 +150,6 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
         }
         return -1;
     }
-
-//    public boolean configure() {
-//        int occupiedRegionCount = (int) availabilityList.stream().filter(region -> !region.booleanValue()).count();
-//        if (volatileMemory.isEmpty() || occupiedRegionCount == regions.size())
-//            return false;
-//
-//        Iterator<Bitstream> iterator = volatileMemory.iterator();
-//        while (iterator.hasNext()) {
-//            Bitstream bitstream = iterator.next();
-//            List<Region> regions = getRegionsForVFpga(bitstream.getRequiredBlockCount(),
-//                    bitstream.getAccelerator().getId());
-//            if (regions != null) {
-//                Accelerator vFpga = new Accelerator(Accelerator.CURRENT_VFPGA_ID++, bitstream.getAdapter(), regions);
-//                vFpga.setAccelerator(bitstream.getAccelerator());
-//                fpga.getNetworkManager().sendDataToComponent(vFpga);
-//            } else
-//                return false;
-//        }
-//        return true;
-//    }
-
-//    private List<Region> getRegionsForVFpga(int requiredRegionCount, long acceleratorId) {
-//        List<Region> dynamicRegions = getDynamicRegions();
-//        List<Region> regionsForVFpga = new ArrayList<>();
-//        for (int i = 0; i < dynamicRegions.size() && requiredRegionCount != 0; ++i) {
-//            if (availabilityList.get(i).booleanValue() == true) {
-//                regionsForVFpga.add(dynamicRegions.get(i));
-//                availabilityList.set(i, false);
-//                int row = i / map.length;
-//                int col = i % map[0].length;
-//                map[row][col] = acceleratorId;
-//                --requiredRegionCount;
-//            }
-//        }
-//        if (requiredRegionCount != 0)
-//            return null;
-//        return regionsForVFpga;
-//    }
 
     public List<Region> getDynamicRegions() {
         List<Region> dynamicRegions = new ArrayList<>();
