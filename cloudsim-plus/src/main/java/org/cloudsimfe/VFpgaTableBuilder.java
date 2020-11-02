@@ -70,7 +70,8 @@ public class VFpgaTableBuilder extends TableBuilderAbstract<VFpga> {
     protected void createTableColumns() {
         final String ID = "ID";
         addColumnDataFunction(getTable().addColumn("vFPGA", ID), vFpga -> vFpga.getId());
-        addColumnDataFunction(getTable().addColumn("   IPv4-Address"), vFpga -> vFpga.getIpAddress());
+        addColumnDataFunction(getTable().addColumn("   IPv4-Address"), vFpga -> vFpga.getIpAddress() != null ?
+                vFpga.getIpAddress() : "");
         addColumnDataFunction(getTable().addColumn("FPGA", ID), vFpga -> vFpga.getManager().getFpga().getId());
         addColumnDataFunction(getTable().addColumn("Accelerator", ID),
                 vFpga -> vFpga.getAccelerator().getAcceleratorId());

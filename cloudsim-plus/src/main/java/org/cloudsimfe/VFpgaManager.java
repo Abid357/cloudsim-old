@@ -264,7 +264,6 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
         int col;
         int listOffset = 0;
 
-        int availableBlockCount = (int) availableBlocks.stream().filter(block -> block.booleanValue()).count();
         int requiredBlockCount = 0;
 
         // offset is to ignore the blocks corresponding to static regions
@@ -297,8 +296,6 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
                         r++;
                     }
                     r--;
-                    if (requiredBlockCount > availableBlockCount)
-                        configureVFpga = false;
                 }
 
                 if (configureVFpga) {
@@ -310,6 +307,7 @@ public class VFpgaManager extends CloudSimEntity implements Addressable, Clockab
 
                     sendNow(manager, CloudSimTags.VFPGA_DYNAMIC_PARTIAL_RECONFIGURATION, new Payload(data));
                     configureVFpga = false;
+//                    availableBlockCount += requiredBlockCount;
                     requiredBlockCount = 0;
                     row = r;
                 }

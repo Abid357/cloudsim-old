@@ -47,7 +47,7 @@ import java.util.List;
  *
  * @author Abid Farhan
  */
-public class DyRACTExample {
+public class MFMAExample {
 
     private final CloudSim simulation;
     private DatacenterBrokerFE broker0;
@@ -55,18 +55,18 @@ public class DyRACTExample {
     private DhcpServer server;
     private NetlistStore store;
 
-    private DyRACTExample() {
+    private MFMAExample() {
         server = new DhcpServer();
         store = new NetlistStore();
 
         simulation = new CloudSim(0.0001);
 
         // CREATE HOST
-        double mipsHost = 3200; // converted from MHz to MIPS
+        double mipsHost = 3000; // converted from MHz to MIPS
         long ram = 16000; // in MB equivalent of 16GB
-        long bandwidth = 1000; // in Mbps equivalent of 1GE Ethernet
+        long bandwidth = 10000; // in Mbps equivalent of 10GE Ethernet
         long storage = 100000; // in MB equivalent of 100GB
-        int cores = 6;
+        int cores = 12;
         List<Pe> peList = new ArrayList<>();
 
         for (int i = 0; i < cores; i++)
@@ -75,10 +75,30 @@ public class DyRACTExample {
 
         // CREATE FPGA
         PartitionPolicy partitionPolicy = new PartitionPolicyGrid();
-        partitionPolicy.setOption(4, PartitionPolicyGrid.OPTION_GRID_ROWS);
+        partitionPolicy.setOption(3, PartitionPolicyGrid.OPTION_GRID_ROWS);
         partitionPolicy.setOption(4, PartitionPolicyGrid.OPTION_GRID_COLS);
 
         Fpga fpga1 = new Fpga.Builder(simulation, 1, server)
+                .setBrand("Xilinx")
+                .setFamily("Virtex-6")
+                .setModel("XC6VLX550T")
+                .setLogicElements(549888)
+                .setMemoryRegisters(22752)
+                .setBlockedRams(632)
+                .setDspSlices(864)
+                .setIoPins(1200)
+                .setTransceivers(40)
+                .setPhaseLockedLoops(18)
+                .setLength(43)
+                .setWidth(43)
+                .setClock(600)
+                .setConfigurationClock(100)
+                .setConfigurationBusWidth(ConfigurationManager.BUS_WIDTH_32_BIT)
+                .setPartitionPolicy(partitionPolicy)
+                .setStaticRegionCount(2)
+                .build();
+
+        Fpga fpga2 = new Fpga.Builder(simulation, 2, server)
                 .setBrand("Xilinx")
                 .setFamily("Virtex-6")
                 .setModel("XC6VLX240T")
@@ -95,10 +115,10 @@ public class DyRACTExample {
                 .setConfigurationClock(100)
                 .setConfigurationBusWidth(ConfigurationManager.BUS_WIDTH_32_BIT)
                 .setPartitionPolicy(partitionPolicy)
-                .setStaticRegionCount(2)
+                .setStaticRegionCount(1)
                 .build();
 
-        Fpga fpga2 = new Fpga.Builder(simulation, 2, server)
+        Fpga fpga3 = new Fpga.Builder(simulation, 3, server)
                 .setBrand("Xilinx")
                 .setFamily("Virtex-7")
                 .setModel("XC7VX485T")
@@ -115,39 +135,62 @@ public class DyRACTExample {
                 .setConfigurationClock(100)
                 .setConfigurationBusWidth(ConfigurationManager.BUS_WIDTH_32_BIT)
                 .setPartitionPolicy(partitionPolicy)
-                .setStaticRegionCount(2)
+                .setStaticRegionCount(1)
                 .build();
 
         // CREATE DATACENTER AND BROKER
-        datacenter0 = new DatacenterFE(simulation, Arrays.asList(host), Arrays.asList(fpga1, fpga2), server);
+        datacenter0 = new DatacenterFE(simulation, Arrays.asList(host), Arrays.asList(fpga1, fpga2, fpga3), server);
         datacenter0.setName("DatacenterFE");
         broker0 = new DatacenterBrokerFE(simulation, "BrokerFE");
 
         // CREATE VM
-        double mipsVm = 3200;
+        double mipsVm = 3000;
         Vm vm = new VmSimple(mipsVm, 1);
         vm.setRam(4000).setBw(1000).setSize(10000).setCloudletScheduler(new CloudletSchedulerSpaceShared());
 
         // CREATE ACCELERATOR
-        Accelerator videoProcessor = new Accelerator(2, 500,
-                30, Accelerator.TYPE_VIDEO_PROCESSING);
-        videoProcessor.setClock(250);
-        videoProcessor.setBroker(broker0);
+        Accelerator imageAccelerator = new Accelerator(1, 400,
+                40, Accelerator.TYPE_IMAGE_PROCESSING);
+        imageAccelerator.setBroker(broker0);
 
-        Netlist netlist = new Netlist(videoProcessor, 20, 1, 2, 1);
-        store.addNetlist(netlist);
+        Accelerator videoAccelerator = new Accelerator(2, 500,
+                30, Accelerator.TYPE_VIDEO_PROCESSING);
+        videoAccelerator.setClock(250);
+        videoAccelerator.setBroker(broker0);
+
+        Accelerator encryptionAccelerator = new Accelerator(3, 100,
+                100, Accelerator.TYPE_ENCRYPTION);
+        encryptionAccelerator.setClock(100);
+        encryptionAccelerator.setBroker(broker0);
+
+        store.addNetlist(new Netlist(imageAccelerator, 4, 1, 2, 1));
+        store.addNetlist(new Netlist(videoAccelerator, 10, 1, 3, 3));
+        store.addNetlist(new Netlist(encryptionAccelerator, 3, 1, 4, 1));
 
         // CREATE CLOUDLET
-        AccelerableCloudlet frames = new AccelerableCloudlet(6000,
+        AccelerableCloudlet videoFrames = new AccelerableCloudlet(6000,
                 1);
-        frames.addSegment(1261, 4739, Accelerator.TYPE_VIDEO_PROCESSING);
+        videoFrames.addSegment(1000, 4500, Accelerator.TYPE_VIDEO_PROCESSING);
 
-        List<AccelerableCloudlet> videoFrames = Arrays.asList(frames);
-        List<Accelerator> requestedAccelerators = createAcceleratorRequests(videoFrames);
+        AccelerableCloudlet image1 = new AccelerableCloudlet(2500,
+                1);
+        image1.addSegment(500, 2000, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet image2 = new AccelerableCloudlet(2500,
+                1);
+        image2.addSegment(500, 2000, Accelerator.TYPE_IMAGE_PROCESSING);
+
+        AccelerableCloudlet encryptionKey = new AccelerableCloudlet(10000,
+                1);
+        encryptionKey.addSegment(1000, 7000, Accelerator.TYPE_ENCRYPTION);
+        encryptionKey.addSegment(9000, 1000, Accelerator.TYPE_ENCRYPTION);
+
+        List<AccelerableCloudlet> cloudlets = Arrays.asList(videoFrames, image1, image2, encryptionKey);
+        List<Accelerator> requestedAccelerators = createAcceleratorRequests(cloudlets);
 
         // SETUP
         broker0.submitVmList(Arrays.asList(vm));
-        broker0.submitCloudletList(videoFrames);
+        broker0.submitCloudletList(cloudlets);
         broker0.submitAcceleratorRequests(requestedAccelerators);
         datacenter0.getUnifiedManager().setBroker(broker0);
         datacenter0.getUnifiedManager().setNetlistStore(store);
@@ -165,7 +208,7 @@ public class DyRACTExample {
     }
 
     public static void main(String[] args) {
-        new DyRACTExample();
+        new MFMAExample();
     }
 
     public List<Accelerator> createAcceleratorRequests(List<AccelerableCloudlet> list) {

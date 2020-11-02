@@ -124,7 +124,7 @@ public class ConfigurationManager extends AddressableComponent implements Clocka
                 mappers.get(i).setBlockInFabric(index + 1);
                 configuredRegions.add(region);
 
-                int row = index / map.length;
+                int row = index / map[0].length;
                 int col = index % map[0].length;
                 map[row][col] = mappers.get(i).getvFpgaId();
             }

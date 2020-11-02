@@ -85,7 +85,8 @@ public class DatacenterFE extends DatacenterSimple {
                     "{}: {}: Region scheduling has finished. Scheduling duration: {} {}",
                     getSimulation().clockStr(), getClass().getSimpleName(), schedulingDuration, unit);
 
-//            unifiedManager.printRegionScheduler(RegionSchedulerMSA.PRINT_OPTION_SUMMARY);
+            unifiedManager.printRegionScheduler(System.out, RegionSchedulerMSA.PRINT_DATA_BEST_SOLUTION,
+                    RegionSchedulerMSA.PRINT_OPTION_TABLE);
 
             sendNow(unifiedManager, CloudSimTags.VFPGA_UPDATE_SEGMENT_PROCESSING);
             return true;
