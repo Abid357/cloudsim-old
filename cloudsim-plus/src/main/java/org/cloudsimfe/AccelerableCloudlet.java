@@ -8,7 +8,6 @@ import org.cloudbus.cloudsim.utilizationmodels.UtilizationModel;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class AccelerableCloudlet extends CloudletSimple {
 
@@ -109,6 +108,14 @@ public class AccelerableCloudlet extends CloudletSimple {
         }
 
         return segments.add(newSegment);
+    }
+
+    public AccelerableCloudlet copy() {
+        AccelerableCloudlet cloudlet = new AccelerableCloudlet(getId(), length, getNumberOfPes());
+        for (AccelerableSegment segment : segments)
+            cloudlet.addSegment(new AccelerableSegment(segment.getId(), segment.getIndex(), segment.getLength(), cloudlet
+                    , segment.getType()));
+        return cloudlet;
     }
 
     public void setOverallFinishTime(double finishTime) {

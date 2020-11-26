@@ -1,28 +1,6 @@
-/*
- * CloudSim Plus: A modern, highly-extensible and easier-to-use Framework for
- * Modeling and Simulation of Cloud Computing Infrastructures and Services.
- * http://cloudsimplus.org
- *
- *     Copyright (C) 2015-2018 Universidade da Beira Interior (UBI, Portugal) and
- *     the Instituto Federal de Educação Ciência e Tecnologia do Tocantins (IFTO, Brazil).
- *
- *     This file is part of CloudSim Plus.
- *
- *     CloudSim Plus is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *
- *     CloudSim Plus is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with CloudSim Plus. If not, see <http://www.gnu.org/licenses/>.
- */
 package org.cloudsimfe.examples;
 
+import org.cloudbus.cloudsim.cloudlets.CloudletSimple;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.hosts.Host;
 import org.cloudbus.cloudsim.hosts.HostSimple;
@@ -36,17 +14,8 @@ import org.cloudsimfe.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
-/**
- * A minimal but organized, structured and re-usable CloudSim Plus example
- * which shows good coding practices for creating simulation scenarios.
- *
- * <p>It defines a set of constants that enables a developer
- * to change the number of Hosts, VMs and Cloudlets to create
- * and the number of {@link Pe}s for Hosts, VMs and Cloudlets.</p>
- *
- * @author Abid Farhan
- */
 public class MFMAExample {
 
     private final CloudSim simulation;
@@ -69,9 +38,13 @@ public class MFMAExample {
         int cores = 12;
         List<Pe> peList = new ArrayList<>();
 
-        for (int i = 0; i < cores; i++)
-            peList.add(new PeSimple(mipsHost));
-        Host host = new HostSimple(ram, bandwidth, storage, peList);
+        List<Host> scalableHostlist = new ArrayList<>();
+        for (int j = 0; j < 20; j++) {
+            for (int i = 0; i < cores; i++)
+                peList.add(new PeSimple(mipsHost));
+            Host host = new HostSimple(ram, bandwidth, storage, peList);
+            scalableHostlist.add(host);
+        }
 
         // CREATE FPGA
         PartitionPolicy partitionPolicy = new PartitionPolicyGrid();
@@ -150,14 +123,19 @@ public class MFMAExample {
                 scalableFpgaList.add(fpgaList.get(i % fpgaList.size()).copy(simulation, i + 1, server, partitionPolicy));
         }
 
-        datacenter0 = new DatacenterFE(simulation, Arrays.asList(host), scalableFpgaList, server);
+        datacenter0 = new DatacenterFE(simulation, scalableHostlist, scalableFpgaList, server);
         datacenter0.setName("DatacenterFE");
         broker0 = new DatacenterBrokerFE(simulation, "BrokerFE");
 
         // CREATE VM
         double mipsVm = 3000;
-        Vm vm = new VmSimple(mipsVm, 1);
-        vm.setRam(4000).setBw(1000).setSize(10000).setCloudletScheduler(new CloudletSchedulerSpaceShared());
+
+        List<Vm> scalableVmList = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            Vm vm = new VmSimple(mipsVm, 1);
+            vm.setRam(4000).setBw(1000).setSize(10000).setCloudletScheduler(new CloudletSchedulerSpaceShared());
+            scalableVmList.add(vm);
+        }
 
         // CREATE ACCELERATOR
         Accelerator imageAccelerator = new Accelerator(1, 400,
@@ -175,8 +153,8 @@ public class MFMAExample {
         encryptionAccelerator.setBroker(broker0);
 
         store.addNetlist(new Netlist(imageAccelerator, 4, 1, 2, 1));
-        store.addNetlist(new Netlist(videoAccelerator, 10, 1, 3, 3));
-        store.addNetlist(new Netlist(encryptionAccelerator, 3, 1, 4, 1));
+        store.addNetlist(new Netlist(videoAccelerator, 8, 1, 3, 3));
+        store.addNetlist(new Netlist(encryptionAccelerator, 2, 1, 4, 1));
 
         // CREATE CLOUDLET
         AccelerableCloudlet videoFrames = new AccelerableCloudlet(6000,
@@ -197,18 +175,27 @@ public class MFMAExample {
         encryptionKey.addSegment(9000, 1000, Accelerator.TYPE_ENCRYPTION);
 
         List<AccelerableCloudlet> cloudlets = Arrays.asList(videoFrames, image1, image2, encryptionKey);
-        List<Accelerator> requestedAccelerators = createAcceleratorRequests(cloudlets);
+        List<AccelerableCloudlet> scalableCloudletList = new ArrayList<>();
+        Random random = new Random();
+        for (int i = 0; i < 100; i++){
+            scalableCloudletList.add(cloudlets.get(random.nextInt(cloudlets.size())).copy());
+            scalableCloudletList.get(scalableCloudletList.size() - 1).setId(i + 1);
+        }
+
+        for (int i = 100; i < 150; i++){
+            scalableCloudletList.add(new AccelerableCloudlet(1000, 1));
+        }
+
+        List<Accelerator> requestedAccelerators = createAcceleratorRequests(scalableCloudletList);
 
         // SETUP
-        broker0.submitVmList(Arrays.asList(vm));
-        broker0.submitCloudletList(cloudlets);
+        broker0.submitVmList(scalableVmList);
+        broker0.submitCloudletList(scalableCloudletList);
         broker0.submitAcceleratorRequests(requestedAccelerators);
         datacenter0.getUnifiedManager().setBroker(broker0);
         datacenter0.getUnifiedManager().setNetlistStore(store);
         simulation.start();
 
-//        fpga.getVFpgaManager().printScheduledTiles();
-//        new SegmentsTableBuilder(broker0.getFinishedSegments()).setTitle("Acceleration Results").build();
         new AccelerableCloudletsTableBuilder(broker0.getCloudletFinishedList()).setTitle("Accelerable Cloudlet " +
                 "Execution" +
                 " Results").build();

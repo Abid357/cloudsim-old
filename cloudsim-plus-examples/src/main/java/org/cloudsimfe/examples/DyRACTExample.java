@@ -1,26 +1,3 @@
-/*
- * CloudSim Plus: A modern, highly-extensible and easier-to-use Framework for
- * Modeling and Simulation of Cloud Computing Infrastructures and Services.
- * http://cloudsimplus.org
- *
- *     Copyright (C) 2015-2018 Universidade da Beira Interior (UBI, Portugal) and
- *     the Instituto Federal de Educação Ciência e Tecnologia do Tocantins (IFTO, Brazil).
- *
- *     This file is part of CloudSim Plus.
- *
- *     CloudSim Plus is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *
- *     CloudSim Plus is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *
- *     You should have received a copy of the GNU General Public License
- *     along with CloudSim Plus. If not, see <http://www.gnu.org/licenses/>.
- */
 package org.cloudsimfe.examples;
 
 import org.cloudbus.cloudsim.core.CloudSim;
@@ -37,16 +14,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-/**
- * A minimal but organized, structured and re-usable CloudSim Plus example
- * which shows good coding practices for creating simulation scenarios.
- *
- * <p>It defines a set of constants that enables a developer
- * to change the number of Hosts, VMs and Cloudlets to create
- * and the number of {@link Pe}s for Hosts, VMs and Cloudlets.</p>
- *
- * @author Abid Farhan
- */
 public class DyRACTExample {
 
     private final CloudSim simulation;
@@ -153,8 +120,6 @@ public class DyRACTExample {
         datacenter0.getUnifiedManager().setNetlistStore(store);
         simulation.start();
 
-//        fpga.getVFpgaManager().printScheduledTiles();
-//        new SegmentsTableBuilder(broker0.getFinishedSegments()).setTitle("Acceleration Results").build();
         new AccelerableCloudletsTableBuilder(broker0.getCloudletFinishedList()).setTitle("Accelerable Cloudlet " +
                 "Execution" +
                 " Results").build();

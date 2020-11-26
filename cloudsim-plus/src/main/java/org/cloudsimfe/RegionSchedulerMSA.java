@@ -288,12 +288,12 @@ public class RegionSchedulerMSA implements RegionScheduler {
         duration = TimeUnit.NANOSECONDS.toMillis(duration);
         System.out.println("-----------\n| SUMMARY |\n-----------");
         if (duration > 0)
-            System.out.println("Simulation duration: " + duration + " ms");
+            System.out.println("Scheduling duration: " + duration + " ms");
         else
-            System.out.println("Simulation duration: < 1 ms");
+            System.out.println("Scheduling duration: < 1 ms");
         System.out.println("Number of FPGAs: " + NUM_OF_FPGAS);
         System.out.println("Number of regions: " + NUM_OF_REGIONS);
-        System.out.println("Number of VFPGAs: " + NUM_OF_TASKS);
+        System.out.println("Number of vFPGAs: " + NUM_OF_TASKS);
         System.out.println("Max time (tmax): " + T_MAX + " time units");
         System.out.println("Completion time (initial solution): " + getCompletionTime(initialSolution) + " time units");
         System.out.println("Completion time (best solution): " + completionTime + " time units");

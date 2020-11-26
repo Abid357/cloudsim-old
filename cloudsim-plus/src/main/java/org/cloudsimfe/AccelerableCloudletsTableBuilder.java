@@ -92,7 +92,8 @@ public class AccelerableCloudletsTableBuilder extends TableBuilderAbstract<Accel
 
         TableColumn col = getTable().addColumn("Acc.ExecTime", SECONDS).setFormat(TIME_FORMAT);
         addColumnDataFunction(col,
-                cloudlet -> cloudlet.getSegments().stream().anyMatch(segment -> segment.getExecution() == null) ? 0 :
+                cloudlet -> cloudlet.getSegments().isEmpty() ? 0 :
+                        cloudlet.getSegments().stream().anyMatch(segment -> segment.getExecution() == null) ? 0 :
                         cloudlet.getSegments().stream().max(finishTimeComparator).get().getExecution().getFinishTime() -
                                 cloudlet.getSegments().stream().min(startTimeComparator).get().getExecution().getSegmentArrivalTime());
 
@@ -103,7 +104,8 @@ public class AccelerableCloudletsTableBuilder extends TableBuilderAbstract<Accel
 
         col = getTable().addColumn("TotalExecTime", SECONDS).setFormat(TIME_FORMAT);
         addColumnDataFunction(col,
-                cloudlet -> cloudlet.getSegments().stream().anyMatch(segment -> segment.getExecution() == null) ?
+                cloudlet -> cloudlet.getSegments().isEmpty() ? cloudlet.getNonAccelerableSegments().getActualCpuTime() :
+                        cloudlet.getSegments().stream().anyMatch(segment -> segment.getExecution() == null) ?
                         cloudlet.getActualCpuTime() :
                         cloudlet.getSegments().stream().max(finishTimeComparator).get().getExecution().getFinishTime() -
                         cloudlet.getSegments().stream().min(startTimeComparator).get().getExecution().getSegmentArrivalTime() + cloudlet.getNonAccelerableSegments().getActualCpuTime());
